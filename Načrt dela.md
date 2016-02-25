@@ -5,6 +5,7 @@
 
 ##2. teden
 načrt programa
+
 programiranje grafičnega vmesnika
 
 ##3. teden
