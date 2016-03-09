@@ -86,12 +86,12 @@ class Vmesnik():
     def narisi_crto(self, k, i, j):
         """ narisi crto med ustrezna krogca na igralnem polju """
         if k == 'vodoravno':
-            self.polje.create_line(50*(j+1), 50*(i+1), 50*(j+2), 50*(i+1))
+            self.polje.create_line(50*(j+1)+5, 50*(i+1), 50*(j+2)-5, 50*(i+1))
         else:
-            self.polje.create_line(50*(j+1), 50*(i+1), 50*(j+1), 50*(i+2))
+            self.polje.create_line(50*(j+1), 50*(i+1)+5, 50*(j+1), 50*(i+2)-5)
 
-    def pobarvaj_kvadratek(self, i, j):
-        pass
+    def pobarvaj_kvadratek(self, j, i):
+        self.polje.create_rectangle(50*i+5, 50*j+5, 50*i+45, 50*j+45, fill='black')
 
 
 

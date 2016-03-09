@@ -46,4 +46,28 @@ class Igra():
                 self.vodoravne[i][j] = True
             else:
                 self.navpicne[i][j]  = True
+            self.poln_kvadratek(k, i, j)
 
+    def poln_kvadratek(self, k, i, j):
+        if k == "vodoravno":
+            if i != 0: # zgornji
+                if self.vodoravne[i-1][j]:
+                    if self.navpicne[i-1][j]:
+                        if self.navpicne[i-1][j+1]:
+                            self.vmesnik.pobarvaj_kvadratek(i, j+1)
+            if i != 7: # spodnji
+                if self.vodoravne[i+1][j]:
+                    if self.navpicne[i][j]:
+                        if self.navpicne[i][j+1]:
+                            self.vmesnik.pobarvaj_kvadratek(i+1, j+1)
+        else:
+            if j != 0: # levi
+                if self.navpicne[i][j-1]:
+                    if self.vodoravne[i][j-1]:
+                        if self.vodoravne[i+1][j-1]:
+                            self.vmesnik.pobarvaj_kvadratek(i+1, j)
+            if j != 7: # desni
+                if self.navpicne[i][j+1]:
+                    if self.vodoravne[i][j]:
+                        if self.vodoravne[i+1][j]:
+                            self.vmesnik.pobarvaj_kvadratek(i+1, j+1)
