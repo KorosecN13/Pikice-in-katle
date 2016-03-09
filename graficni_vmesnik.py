@@ -2,6 +2,7 @@ __author__ = 'KorosecN13'
 
 # Pikice in skatle
 from tkinter import *
+from igra import Igra
 
 
 class Vmesnik():
@@ -64,8 +65,8 @@ class Vmesnik():
 
         for i in range(8):
             for j in range(8):
-                self.polje.create_oval(50*(i+1)-5, 50*(j+1)-5, 50*(i+1)+5, 50*(j+1)+5)
-
+                self.polje.create_oval(50*(i+1)-5, 50*(j+1)-5, 50*(i+1)+5, 50*(j+1)+5, fill='black')
+        self.igra = Igra(self)
         self.zacni_igro()
 
     # def nastavi_velikost(self):
@@ -75,27 +76,24 @@ class Vmesnik():
         pass
 
     def zacni_igro(self):
-        self.polje.bind('<Button-1>', self.narisi_crto)
+        self.polje.bind('<Button-1>', self.klik)
 
-    def narisi_crto(self, event):
-        """ narisi crto med ustrezna krogca na igralnem polju """
+    def klik(self, event):
         x, y = event.x, event.y
-        lok_x, lok_y = x % 50, y % 50
-        if lok_x < 10 or lok_x > 40 or lok_y < 10 or lok_y > 40:
-            if lok_y > lok_x:
-                if lok_y > 50 - lok_x:
-                    if y < 400 and 50 < x < 400:
-                        self.polje.create_line(50*(x//50), 50*(y//50+1), 50*(x//50+1), 50*(y//50+1))
-                else:
-                    if x > 50 and 50 < y < 400:
-                        self.polje.create_line(50*(x//50), 50*(y//50), 50*(x//50), 50*(y//50+1))
-            else:
-                if lok_y > 50 - lok_x:
-                    if x < 400 and 50 < y < 400:
-                        self.polje.create_line(50*(x//50+1), 50*(y//50), 50*(x//50+1), 50*(y//50+1))
-                else:
-                    if y > 50 and 50 < x < 400:
-                        self.polje.create_line(50*(x//50), 50*(y//50), 50*(x//50+1), 50*(y//50))
+        # doloci kdo je na potezi
+        self.igra.povleci_potezo(x, y)
+
+    def narisi_crto(self, k, i, j):
+        """ narisi crto med ustrezna krogca na igralnem polju """
+        if k == 'vodoravno':
+            self.polje.create_line(50*(j+1), 50*(i+1), 50*(j+2), 50*(i+1))
+        else:
+            self.polje.create_line(50*(j+1), 50*(i+1), 50*(j+1), 50*(i+2))
+
+    def pobarvaj_kvadratek(self, i, j):
+        pass
+
+
 
 
 root = Tk()
