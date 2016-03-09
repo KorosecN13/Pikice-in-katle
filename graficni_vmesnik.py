@@ -81,20 +81,21 @@ class Vmesnik():
         """ narisi crto med ustrezna krogca na igralnem polju """
         x, y = event.x, event.y
         lok_x, lok_y = x % 50, y % 50
-        if lok_y > lok_x:
-            if lok_y > 50 - lok_x:
-                if y < 400 and 50 < x < 400:
-                    self.polje.create_line(50*(x//50), 50*(y//50+1), 50*(x//50+1), 50*(y//50+1))
+        if lok_x < 10 or lok_x > 40 or lok_y < 10 or lok_y > 40:
+            if lok_y > lok_x:
+                if lok_y > 50 - lok_x:
+                    if y < 400 and 50 < x < 400:
+                        self.polje.create_line(50*(x//50), 50*(y//50+1), 50*(x//50+1), 50*(y//50+1))
+                else:
+                    if x > 50 and 50 < y < 400:
+                        self.polje.create_line(50*(x//50), 50*(y//50), 50*(x//50), 50*(y//50+1))
             else:
-                if x > 50 and 50 < y < 400:
-                    self.polje.create_line(50*(x//50), 50*(y//50), 50*(x//50), 50*(y//50+1))
-        else:
-            if lok_y > 50 - lok_x:
-                if x < 400 and 50 < y < 400:
-                    self.polje.create_line(50*(x//50+1), 50*(y//50), 50*(x//50+1), 50*(y//50+1))
-            else:
-                if y > 50 and 50 < x < 400:
-                    self.polje.create_line(50*(x//50), 50*(y//50), 50*(x//50+1), 50*(y//50))
+                if lok_y > 50 - lok_x:
+                    if x < 400 and 50 < y < 400:
+                        self.polje.create_line(50*(x//50+1), 50*(y//50), 50*(x//50+1), 50*(y//50+1))
+                else:
+                    if y > 50 and 50 < x < 400:
+                        self.polje.create_line(50*(x//50), 50*(y//50), 50*(x//50+1), 50*(y//50))
 
 
 root = Tk()
