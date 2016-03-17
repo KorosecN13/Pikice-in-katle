@@ -16,14 +16,22 @@ class Vmesnik():
         menu = Menu(master)
         master.config(menu=menu)
 
-        # File
-        file_menu = Menu(menu)
-        menu.add_cascade(label="File", menu=file_menu)
+        # Ustvarimo menija
+        nova_igra_menu = Menu(menu)
+        zapri_menu = Menu(menu)
 
-        # Dodamo izbire v file_menu
-        # file_menu.add_command(label="Nastavi velikost", command=self.nastavi_velikost)
-        file_menu.add_command(label="Nova igra", command=self.nova_igra)
-        file_menu.add_command(label="Izhod", command=master.destroy)
+        # Ustvarimo orodno vrstico
+        menu.add_cascade(label="Nova igra", menu=nova_igra_menu)
+        menu.add_cascade(label="Izhod", menu=zapri_menu)
+
+        # Dodamo izbire v nova_igra_menu
+        nova_igra_menu.add_command(label="človek : človek", command=self.clo_clo)
+        nova_igra_menu.add_command(label="človek : računalnik", command=self.clo_rac)
+        nova_igra_menu.add_command(label="računalnik : človek", command=self.rac_clo)
+        nova_igra_menu.add_command(label="računalnik : računalnik", command=self.rac_rac)
+
+        # Dodamo izbiro v zapri_menu
+        zapri_menu.add_command(label="Izhod", command=master.destroy)
 
         # Velikost polja
         self.vrstice = 8
@@ -44,7 +52,7 @@ class Vmesnik():
         polje_ime_igralec1.grid(row=1, column=0)
         polje_ime_igralec2.grid(row=1, column=1)
 
-        # spremenljivke, ki stejejo trenutni rezultat igre
+        # Spremenljivke, ki štejejo trenutni rezultat igre
         self.stevec_igralec1 = IntVar(master, value=0)
         self.stevec_igralec2 = IntVar(master, value=0)
 
@@ -72,8 +80,18 @@ class Vmesnik():
         self.igra = Igra(self)
         self.zacni_igro()
 
-    # def nastavi_velikost(self):
-    #    pass
+        # določi igralca glede na izbiro iz orodne vrstice
+    def clo_clo(self):
+        pass
+
+    def clo_rac(self):
+        pass
+
+    def rac_clo(self):
+        pass
+
+    def rac_rac(self):
+        pass
 
     def nova_igra(self):
         self.zacni_igro()
@@ -88,7 +106,7 @@ class Vmesnik():
         self.igra.povleci_potezo(x, y)
 
     def narisi_crto(self, k, i, j, barva):
-        """ narisi crto med ustrezna krogca na igralnem polju """
+        """ narisi crto med ustrezna krogca na igralnem polju"""
         if k == 'vodoravno':
             self.polje.create_line(50*(j+1)+5, 50*(i+1), 50*(j+2)-5, 50*(i+1), fill=barva, width=3)
         else:
@@ -103,10 +121,10 @@ class Vmesnik():
         else:
             zmagovalec = self.ime_igralec2.get()
         self.polje.create_rectangle(100, 150, 350, 300, fill='green yellow')
-        self.polje_id1 = self.polje.create_text(225,200,font=("Purisa", 20))
-        self.polje.itemconfig(self.polje_id1 ,text='Zmagal je')
-        self.polje_id1 = self.polje.create_text(225,250,font=("Purisa", 20))
-        self.polje.itemconfig(self.polje_id1 ,text='{0}'.format(zmagovalec))
+        self.polje_id1 = self.polje.create_text(225, 200, font=("Purisa", 20))
+        self.polje.itemconfig(self.polje_id1, text='Zmagal je')
+        self.polje_id2 = self.polje.create_text(225, 250, font=("Purisa", 20))
+        self.polje.itemconfig(self.polje_id2, text='{0}'.format(zmagovalec))
 
 
 root = Tk()
