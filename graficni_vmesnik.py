@@ -51,7 +51,7 @@ class Vmesnik():
                                                                               self.stevec_igralec2, self.barva2, None)))
 
         # Dodamo izbiro v zapri_menu
-        zapri_menu.add_command(label="Izhod", command=lambda: master.destroy)
+        zapri_menu.add_command(label="Izhod", command= master.destroy)
 
         # Velikost polja
         self.vrstice = 8
