@@ -5,6 +5,7 @@ from tkinter import *
 from igra import Igra
 from igralci import Clovek
 from igralci import Racunalnik
+from igralci import Minimax
 
 
 class Vmesnik():
@@ -38,20 +39,20 @@ class Vmesnik():
                                    command=lambda: self.zacni_igro(Clovek(self, self.ime_igralec1, self.stevec_igralec1,
                                                                           self.barva1),
                                                                    Racunalnik(self, self.ime_igralec2,
-                                                                              self.stevec_igralec2, self.barva2, None)))
+                                                                              self.stevec_igralec2, self.barva2, Minimax(1))))
         nova_igra_menu.add_command(label="računalnik : človek",
                                    command=lambda: self.zacni_igro(Racunalnik(self, self.ime_igralec1,
-                                                                              self.stevec_igralec1, self.barva1, None),
+                                                                              self.stevec_igralec1, self.barva1, Minimax(5)),
                                                                    Clovek(self, self.ime_igralec2, self.stevec_igralec2,
                                                                           self.barva2)))
         nova_igra_menu.add_command(label="računalnik : računalnik",
                                    command=lambda: self.zacni_igro(Racunalnik(self, self.ime_igralec1,
-                                                                              self.stevec_igralec1, self.barva1, None),
+                                                                              self.stevec_igralec1, self.barva1, Minimax(5)),
                                                                    Racunalnik(self, self.ime_igralec2,
-                                                                              self.stevec_igralec2, self.barva2, None)))
+                                                                              self.stevec_igralec2, self.barva2, Minimax(5))))
 
         # Dodamo izbiro v zapri_menu
-        zapri_menu.add_command(label="Izhod", command= master.destroy)
+        zapri_menu.add_command(label="Izhod", command=master.destroy)
 
         # Velikost polja
         self.vrstice = 8
