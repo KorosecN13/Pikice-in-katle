@@ -38,18 +38,18 @@ class Vmesnik():
         nova_igra_menu.add_command(label="človek : računalnik",
                                    command=lambda: self.zacni_igro(Clovek(self, self.ime_igralec1, self.stevec_igralec1,
                                                                           self.barva1),
-                                                                   Racunalnik(self, self.ime_igralec2,
-                                                                              self.stevec_igralec2, self.barva2, Minimax(1))))
+                                                                   Racunalnik(self, self.ime_igralec1,
+                                                                              self.stevec_igralec2, self.barva2, Minimax(2))))
         nova_igra_menu.add_command(label="računalnik : človek",
                                    command=lambda: self.zacni_igro(Racunalnik(self, self.ime_igralec1,
-                                                                              self.stevec_igralec1, self.barva1, Minimax(5)),
+                                                                              self.stevec_igralec1, self.barva1, Minimax(2)),
                                                                    Clovek(self, self.ime_igralec2, self.stevec_igralec2,
                                                                           self.barva2)))
         nova_igra_menu.add_command(label="računalnik : računalnik",
                                    command=lambda: self.zacni_igro(Racunalnik(self, self.ime_igralec1,
-                                                                              self.stevec_igralec1, self.barva1, Minimax(5)),
+                                                                              self.stevec_igralec1, self.barva1, Minimax(2)),
                                                                    Racunalnik(self, self.ime_igralec2,
-                                                                              self.stevec_igralec2, self.barva2, Minimax(5))))
+                                                                              self.stevec_igralec2, self.barva2, Minimax(2))))
 
         # Dodamo izbiro v zapri_menu
         zapri_menu.add_command(label="Izhod", command=master.destroy)
@@ -82,8 +82,8 @@ class Vmesnik():
         self.ime_igralec2 = StringVar(master, value='Igralec 2')
 
         # Kaj moramo povedati programu
-        polje_ime_igralec1 = Entry(master, width=10, textvariable=self.ime_igralec1, background=self.barva1)
-        polje_ime_igralec2 = Entry(master, width=10, textvariable=self.ime_igralec2, background=self.barva2)
+        polje_ime_igralec1 = Entry(master, width=15, textvariable=self.ime_igralec1, background=self.barva1)
+        polje_ime_igralec2 = Entry(master, width=15, textvariable=self.ime_igralec2, background=self.barva2)
 
         # Umestimo jih na glavno okno
         polje_ime_igralec1.grid(row=1, column=0)
@@ -117,6 +117,23 @@ class Vmesnik():
 
     def zacni_igro(self, igralec1, igralec2):
         """ nastavi stanje igra na zacetek """
+        if type(igralec1) == Racunalnik:
+            if type(igralec2) == Racunalnik:
+                self.ime_igralec2.set("Racunalnik 2")
+                self.ime_igralec1.set("Racunalnik 1")
+            else:
+                self.ime_igralec1.set("Racunalnik")
+                if self.ime_igralec2.get() in ("Racunalnik", "Racunalnik 2"):
+                    self.ime_igralec2.set("Igralec 2")
+        elif type(igralec2) == Racunalnik:
+            self.ime_igralec2.set("Racunalnik")
+            if self.ime_igralec1.get() in ("Racunalnik", "Racunalnik 1"):
+                self.ime_igralec1.set("Igralec 1")
+        else:
+            if self.ime_igralec1.get() in ("Racunalnik", "Racunalnik 1"):
+                self.ime_igralec1.set("Igralec 1")
+            if self.ime_igralec2.get() in ("Racunalnik", "Racunalnik 2"):
+                self.ime_igralec2.set("Igralec 2")
         # Pobrišemo vse figure s polja
         self.polje.delete(Vmesnik.TAG_FIGURE)
         # Ustvarimo novo igro
