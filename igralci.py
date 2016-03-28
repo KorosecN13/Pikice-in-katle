@@ -1,5 +1,7 @@
 __author__ = 'uporabnik'
 import threading
+import time
+import random
 
 
 class Clovek():
@@ -35,12 +37,30 @@ class Racunalnik():
     def igraj(self):
         """Igraj potezo, ki jo vrne algoritem."""
         self.mislec = threading.Thread(
-            target=lambda: self.algoritem.izracunaj_potezo(self.vmesnik.igra.kopija(), self.vmesnik))
+            target=lambda: self.algoritem.izracunaj_potezo(self.vmesnik.igra.kopija()))
+        print(threading.active_count())
         self.mislec.start()
+        self.vmesnik.polje.after(100, self.preveri_potezo)
 
     def preveri_potezo(self):
         """Vsakih 100ms preveri, ali je algoritem že izračunal potezo."""
-        pass
+        seznam_potez = self.algoritem.poteze
+        if seznam_potez is not None:
+            print("seznam potez: {0}".format(seznam_potez))
+            # Algoritem je našel potezo, povleci jo, če ni bilo prekinitve
+            while seznam_potez:
+                self.vmesnik.igra.racunalnik_povleci_potezo(seznam_potez.pop())
+                time.sleep(0.5)
+            self.mislec = None
+            self.igra.sprememba_igralca()
+            if self.igra.na_potezi == self.vmesnik.igralec1:
+                self.vmesnik.igralec1.igraj()
+            if self.igra.na_potezi == self.vmesnik.igralec2:
+                self.vmesnik.igralec2.igraj()
+            # Vzporedno vlakno ni več aktivno, zato ga "pozabimo"
+        else:
+            # Algoritem še ni našel poteze, preveri še enkrat čez 100ms
+            self.vmesnik.polje.after(100, self.preveri_potezo)
 
     def prekini(self):
         """ To metodo kliče GUI, če je treba prekiniti razmišljanje. """
@@ -61,7 +81,7 @@ class Minimax:
         self.prekinitev = False
         self.igra = None
         self.jaz = None
-        self.poteza = None
+        self.poteze = None
         self.kopija_vodoravne = None
         self.kopija_navpicne = None
         self.kopija_matrika_kvadratov = None
@@ -74,84 +94,144 @@ class Minimax:
            je uporabnik zaprl okno ali izbral novo igro."""
         self.prekinitev = True
 
-    def izracunaj_potezo(self, igra, vmesnik):
+    def izracunaj_potezo(self, igra):
         """Izračunaj potezo za trenutno stanje dane igre."""
         self.igra = igra
         self.prekinitev = False
         self.jaz = self.igra.na_potezi
-        self.poteza = None
-        (poteza, vrednost) = self.minimax(self.globina, True, None)
+        self.poteze = None
+        (poteza, vrednost, seznam_potez) = self.minimax(self.globina, True, None, [])
         self.jaz = None
         self.igra = None
         if not self.prekinitev:
-            self.poteza = poteza
-            vmesnik.igra.racunalnik_povleci_potezo(self.poteza)
+            self.poteze = seznam_potez
 
-    def minimax(self, globina, maksimiziramo, p):
+    def minimax(self, globina, maksimiziramo, p, seznam_potez):
         """Glavna metoda minimax."""
         if self.prekinitev:
             return None, 0
         if self.igra.konec_igre1():
             # Igre je konec, vrnemo njeno vrednost
             if self.igra.na_potezi == self.jaz:
-                return None, Minimax.ZMAGA
+                return None, Minimax.ZMAGA, seznam_potez
             else:
-                return None, -Minimax.ZMAGA
+                return None, -Minimax.ZMAGA, seznam_potez
         else:
             # Igre ni konec
             if globina == 0:
-                return None, self.vrednost_pozicije(p)
+                vrednost_pozicije, kopija = self.vrednost_pozicije(p)
+                if vrednost_pozicije > 0:
+                    self.igra.zgodovina.append((kopija[0], kopija[1], kopija[2], self.igra.na_potezi))
+                    vrednost_pozicije += self.minimax(1, maksimiziramo, None, seznam_potez)[1]
+                    self.igra.razveljavi()
+                return None, vrednost_pozicije, seznam_potez
             else:
                 # Naredimo eno stopnjo minimax
                 if maksimiziramo:
                     # Maksimiziramo
-                    najboljsa_poteza = None
-                    vrednost_najboljse = -Minimax.NESKONCNO
+                    najboljsa_poteza_n = None
+                    najboljsa_poteza_v = None
+                    vrednost_najboljse_v = -Minimax.NESKONCNO
+                    vrednost_najboljse_n = -Minimax.NESKONCNO
+                    seznam_v = []
+                    seznam_n = []
                     v_veljavne, n_veljavne = self.igra.veljavne_poteze()
+                    random.shuffle(v_veljavne)
+                    random.shuffle(n_veljavne)
                     for i, j in v_veljavne:
                         if globina != 1:
-                            self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
-                        vrednost = self.minimax(globina-1, not maksimiziramo, ("vodoravno", i, j))[1]
+                            p = self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
+                            if p:
+                                poteza, v, s = self.minimax(globina, maksimiziramo, ("vodoravno", i, j), seznam_potez)
+                                vrednost = v + p
+                            else:
+                                poteza, v, s = self.minimax(globina-1, not maksimiziramo, ("vodoravno", i, j), seznam_potez)
+                                vrednost = v
+                        else:
+                            poteza, v, s = self.minimax(globina-1, not maksimiziramo, ("vodoravno", i, j), seznam_potez)
+                            vrednost = v
                         self.igra.razveljavi()
-                        if vrednost > vrednost_najboljse:
-                            vrednost_najboljse = vrednost
-                            najboljsa_poteza = "vodoravno", i, j
+                        if vrednost > vrednost_najboljse_v:
+                            vrednost_najboljse_v = vrednost
+                            najboljsa_poteza_v = ("vodoravno", i, j)
+                            seznam_v = s
                     for i, j in n_veljavne:
                         if globina != 1:
-                            self.igra.navidezno_povleci_potezo(("navpicno", i, j))
-                        vrednost = self.minimax(globina-1, not maksimiziramo, ("navpicno", i, j))[1]
+                            p = self.igra.navidezno_povleci_potezo(("navpicno", i, j))
+                            if p:
+                                poteza, v, s = self.minimax(globina, maksimiziramo, ("navpicno", i, j), seznam_potez)
+                                vrednost = v + p
+                            else:
+                                poteza, v, s = self.minimax(globina-1, not maksimiziramo, ("navpicno", i, j), seznam_potez)
+                                vrednost = v
+                        else:
+                            poteza, v, s = self.minimax(globina-1, not maksimiziramo, ("navpicno", i, j), seznam_potez)
+                            vrednost = v
                         self.igra.razveljavi()
-                        if vrednost > vrednost_najboljse:
-                            vrednost_najboljse = vrednost
-                            najboljsa_poteza = "navpicno", i, j
+                        if vrednost > vrednost_najboljse_n:
+                            vrednost_najboljse_n = vrednost
+                            najboljsa_poteza_n = ("navpicno", i, j)
+                            seznam_n = s
+                    if vrednost_najboljse_v == vrednost_najboljse_n:
+                        vrednost_najboljse, najboljsa_poteza, seznam = \
+                            random.choice([(vrednost_najboljse_v, najboljsa_poteza_v, seznam_v), (vrednost_najboljse_n, najboljsa_poteza_n, seznam_n)])
+                    else:
+                        if vrednost_najboljse_v > vrednost_najboljse_n:
+                            vrednost_najboljse, najboljsa_poteza, seznam = vrednost_najboljse_v, najboljsa_poteza_v, seznam_v
+                        else:
+                            vrednost_najboljse, najboljsa_poteza, seznam = vrednost_najboljse_n, najboljsa_poteza_n, seznam_n
                 else:
                     # Minimiziramo
-                    najboljsa_poteza = None
-                    vrednost_najboljse = Minimax.NESKONCNO
+                    najboljsa_poteza_v = None
+                    najboljsa_poteza_n = None
+                    vrednost_najboljse_v = Minimax.NESKONCNO
+                    vrednost_najboljse_n = Minimax.NESKONCNO
                     v_veljavne, n_veljavne = self.igra.veljavne_poteze()
+                    random.shuffle(v_veljavne)
+                    random.shuffle(n_veljavne)
                     for i, j in v_veljavne:
                         if globina != 1:
-                            self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
-                        vrednost = self.minimax(globina-1, not maksimiziramo, ("vodoravno", i, j))[1]
+                            p = self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
+                            if p:
+                                vrednost = - self.minimax(globina, maksimiziramo, ("vodoravno", i, j), seznam_potez)[1] - p
+                            else:
+                                vrednost = - self.minimax(globina-1, not maksimiziramo, ("vodoravno", i, j), seznam_potez)[1]
+                        else:
+                            vrednost = - self.minimax(globina-1, not maksimiziramo, ("vodoravno", i, j), seznam_potez)[1]
                         self.igra.razveljavi()
-                        if vrednost < vrednost_najboljse:
-                            vrednost_najboljse = vrednost
-                            najboljsa_poteza = "vodoravno", i, j
+                        if vrednost < vrednost_najboljse_v:
+                            vrednost_najboljse_v = vrednost
+                            najboljsa_poteza_v = "vodoravno", i, j
                     for i, j in n_veljavne:
                         if globina != 1:
-                            self.igra.navidezno_povleci_potezo(("navpicno", i, j))
-                        vrednost = self.minimax(globina-1, not maksimiziramo, ("navpicno", i, j))[1]
+                            p = self.igra.navidezno_povleci_potezo(("navpicno", i, j))
+                            if p:
+                                vrednost = - self.minimax(globina, maksimiziramo, ("navpicno", i, j), seznam_potez)[1] - p
+                            else:
+                                vrednost = - self.minimax(globina-1, not maksimiziramo, ("navpicno", i, j), seznam_potez)[1]
+                        else:
+                            vrednost = - self.minimax(globina-1, not maksimiziramo, ("navpicno", i, j), seznam_potez)[1]
                         self.igra.razveljavi()
-                        if vrednost < vrednost_najboljse:
-                            vrednost_najboljse = vrednost
-                            najboljsa_poteza = "navpicno", i, j
-
+                        if vrednost < vrednost_najboljse_n:
+                            vrednost_najboljse_n = vrednost
+                            najboljsa_poteza_n = ("navpicno", i, j)
+                    if vrednost_najboljse_v == vrednost_najboljse_n:
+                        vrednost_najboljse, najboljsa_poteza = \
+                            random.choice([(vrednost_najboljse_v, najboljsa_poteza_v), (vrednost_najboljse_n, najboljsa_poteza_n)])
+                    else:
+                        if vrednost_najboljse_v < vrednost_najboljse_n:
+                            vrednost_najboljse, najboljsa_poteza = vrednost_najboljse_v, najboljsa_poteza_v
+                        else:
+                            vrednost_najboljse, najboljsa_poteza = vrednost_najboljse_n, najboljsa_poteza_n
                 assert (najboljsa_poteza is not None), "minimax: izračunana poteza je None"
-                return najboljsa_poteza, vrednost_najboljse
+                if globina == self.globina:
+                    seznam_potez = seznam + [najboljsa_poteza]
+                return najboljsa_poteza, vrednost_najboljse, seznam_potez
 
     def vrednost_pozicije(self, p):
         k, i, j = p
         vrednost = 0
+        kopija = []
         if k == "vodoravno":
             if i != 0:  # zgornji
                 if self.igra.vodoravne[i-1][j]+self.igra.navpicne[i-1][j]+self.igra.navpicne[i-1][j+1] == 2:
@@ -164,6 +244,7 @@ class Minimax:
                 elif self.igra.vodoravne[i-1][j]+self.igra.navpicne[i-1][j]+self.igra.navpicne[i-1][j+1] == 3:
                     self.kopiraj()
                     vrednost = self.dolzina_verige(k, i, j)
+                kopija = [self.kopija_vodoravne, self.kopija_navpicne, self.kopija_matrika_kvadratov]
             if i != 7:  # spodnji
                 if self.igra.vodoravne[i+1][j]+self.igra.navpicne[i][j]+self.igra.navpicne[i][j+1] == 2:
                     self.kopiraj()
@@ -171,11 +252,16 @@ class Minimax:
                     self.kopija_matrika_kvadratov[i][j] += 1
                     if i != 0:
                         self.kopija_matrika_kvadratov[i-1][j] += 1
-                    if vrednost < 1:
-                        vrednost = min(vrednost, - self.dolzina_verige(k, i, j))
+                    d = self.dolzina_verige(k, i, j)
+                    if (vrednost < 1) and (-d < vrednost):
+                        vrednost = - d
+                        kopija = [self.kopija_vodoravne, self.kopija_navpicne, self.kopija_matrika_kvadratov]
                 elif self.igra.vodoravne[i+1][j]+self.igra.navpicne[i][j]+self.igra.navpicne[i][j+1] == 3:
                     self.kopiraj()
-                    vrednost = max(vrednost, self.dolzina_verige(k, i, j))
+                    d = self.dolzina_verige(k, i, j)
+                    if d > vrednost:
+                        vrednost = d
+                        kopija = [self.kopija_vodoravne, self.kopija_navpicne, self.kopija_matrika_kvadratov]
             self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
         elif k == "navpicno":
             if j != 0:  # levi
@@ -189,6 +275,7 @@ class Minimax:
                 elif self.igra.navpicne[i][j-1]+self.igra.vodoravne[i][j-1]+self.igra.vodoravne[i+1][j-1] == 3:
                     self.kopiraj()
                     vrednost = self.dolzina_verige(k, i, j)
+                kopija = [self.kopija_vodoravne, self.kopija_navpicne, self.kopija_matrika_kvadratov]
             if j != 7:  # desni
                 if self.igra.navpicne[i][j+1]+self.igra.vodoravne[i][j]+self.igra.vodoravne[i+1][j] == 2:
                     self.kopiraj()
@@ -196,13 +283,18 @@ class Minimax:
                     self.kopija_matrika_kvadratov[i][j] += 1
                     if j != 0:
                         self.kopija_matrika_kvadratov[i][j-1] += 1
-                    if vrednost < 1:
-                        vrednost = min(vrednost, - self.dolzina_verige(k, i, j))
+                    d = self.dolzina_verige(k, i, j)
+                    if (vrednost < 1) and (- d < vrednost):
+                        vrednost = - d
+                        kopija = [self.kopija_vodoravne, self.kopija_navpicne, self.kopija_matrika_kvadratov]
                 elif self.igra.navpicne[i][j+1]+self.igra.vodoravne[i][j]+self.igra.vodoravne[i+1][j] == 3:
                     self.kopiraj()
-                    vrednost = max(vrednost, self.dolzina_verige(k, i, j))
+                    d = self.dolzina_verige(k, i, j)
+                    if d > vrednost:
+                        vrednost = d
+                        kopija = [self.kopija_vodoravne, self.kopija_navpicne, self.kopija_matrika_kvadratov]
             self.igra.navidezno_povleci_potezo(("navpicno", i, j))
-        return vrednost
+        return vrednost, kopija
 
     def kopiraj(self):
         self.kopija_vodoravne = [self.igra.vodoravne[i][:] for i in range(8)]

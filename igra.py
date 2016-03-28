@@ -61,7 +61,13 @@ class Igra():
             else:
                 self.navpicne[i][j] = True
             self.popravi_matriko_kvadratov(k, i, j)
-            self.poln_kvadratek(k, i, j)
+            p = self.poln_kvadratek(k, i, j)
+            if p == 0:
+                self.sprememba_igralca()
+            if self.na_potezi == self.vmesnik.igralec1:
+                self.vmesnik.igralec1.igraj()
+            if self.na_potezi == self.vmesnik.igralec2:
+                self.vmesnik.igralec2.igraj()
 
     def racunalnik_povleci_potezo(self, poteza):
         k, i, j = poteza
@@ -82,15 +88,17 @@ class Igra():
         """ navidezno povlece potezo pri minimaxu """
         k, i, j = p
         self.shrani_pozicijo()
-        if self.na_potezi == self.jaz:
-            self.na_potezi = self.nasprotnik
-        elif self.na_potezi == self.nasprotnik:
-            self.na_potezi = self.jaz
         if k == "vodoravno":
             self.vodoravne[i][j] = True
         else:
             self.navpicne[i][j] = True
-        self.popravi_matriko_kvadratov(k, i, j)
+        p = self.popravi_matriko_kvadratov(k, i, j)
+        if p:
+            if self.na_potezi == self.jaz:
+                self.na_potezi = self.nasprotnik
+            elif self.na_potezi == self.nasprotnik:
+                self.na_potezi = self.jaz
+        return p
 
     def poln_kvadratek(self, k, i, j):
         """ pogleda ali je zadnja poteza zaprla kaksen kvadratek """
@@ -134,12 +142,7 @@ class Igra():
         if self.konec_igre():
             self.vmesnik.zmaga()
         else:
-            if p == 0:
-                self.sprememba_igralca()
-            if self.na_potezi == self.vmesnik.igralec1:
-                self.vmesnik.igralec1.igraj()
-            if self.na_potezi == self.vmesnik.igralec2:
-                self.vmesnik.igralec2.igraj()
+            return p
 
     def konec_igre(self):
         """ po vsaki potezi preveri ali je konec igre """
@@ -189,13 +192,23 @@ class Igra():
         return v_poteze, n_poteze
 
     def popravi_matriko_kvadratov(self, k, i, j):
+        p = 0
         if k == "vodoravno":
             if i != 0:  # zgornji
                 self.matrika_kvadratov[i-1][j] += 1
+                if self.matrika_kvadratov[i-1][j] == 4:
+                    p += 1
             if i != 7:  # spodnji
                 self.matrika_kvadratov[i][j] += 1
+                if self.matrika_kvadratov[i][j] == 4:
+                    p += 1
         else:
             if j != 0:  # levi
                 self.matrika_kvadratov[i][j-1] += 1
+                if self.matrika_kvadratov[i][j-1] == 4:
+                    p += 1
             if j != 7:  # desni
                 self.matrika_kvadratov[i][j] += 1
+                if self.matrika_kvadratov[i][j] == 4:
+                    p += 1
+        return p

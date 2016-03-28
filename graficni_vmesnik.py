@@ -111,9 +111,9 @@ class Vmesnik():
         # kaj se zgodi ob kliku na igralno polje
         self.polje.bind('<Button-1>', self.polje_klik)
 
-        # zacnemo igro med dvema clovekoma
+        # zacnemo igro proti racunalniku
         self.zacni_igro(Clovek(self, self.ime_igralec1, self.stevec_igralec1, self.barva1),
-                        Clovek(self, self.ime_igralec2, self.stevec_igralec2, self.barva2))
+                        Racunalnik(self, self.ime_igralec1, self.stevec_igralec2, self.barva2, Minimax(2)))
 
     def zacni_igro(self, igralec1, igralec2):
         """ nastavi stanje igra na zacetek """
