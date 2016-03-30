@@ -122,7 +122,7 @@ class Minimax:
                 vrednost_pozicije, kopija = self.vrednost_pozicije(p)
                 if vrednost_pozicije > 0:
                     self.igra.zgodovina.append((kopija[0], kopija[1], kopija[2], self.igra.na_potezi))
-                    vrednost_pozicije += self.minimax(1, maksimiziramo, None, seznam_potez)[1]
+                    vrednost_pozicije += self.minimax(1, True, None, seznam_potez)[1]
                     self.igra.razveljavi()
                 return None, vrednost_pozicije, seznam_potez
             else:
