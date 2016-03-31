@@ -13,8 +13,9 @@ class Vmesnik():
     TAG_FIGURE = 'figure'
 
     def __init__(self, master):
+        self.master = master
 
-        # Ozadje
+        # Ozadje        
         master.configure(background='gold3')
 
         # Glavni meni
@@ -168,9 +169,13 @@ class Vmesnik():
             self.polje.create_line(50*(j+1), 50*(i+1)+5, 50*(j+1), 50*(i+2)-5,
                                    fill=barva, width=3, tag=Vmesnik.TAG_FIGURE)
 
+        self.master.update_idletasks()
+
+
     def pobarvaj_kvadratek(self, j, i, barva):
         """ pobarva zaprt kvadratek na igralnem polju """
         self.polje.create_rectangle(50*i+5, 50*j+5, 50*i+45, 50*j+45, fill=barva, width=0, tag=Vmesnik.TAG_FIGURE)
+        self.master.update_idletasks()
 
     def zmaga(self):
         """ izpise kdo je zmagovalec """
