@@ -1,5 +1,6 @@
 __author__ = 'SusnikT12'
 
+import time
 
 class Igra():
     def __init__(self, vmesnik):
@@ -9,6 +10,7 @@ class Igra():
         self.vmesnik = vmesnik
         self.na_potezi = None
         self.zgodovina = []
+        self.konec = False
 
     def sprememba_igralca(self):
         if self.na_potezi == self.vmesnik.igralec1:
@@ -53,7 +55,7 @@ class Igra():
         elif self.na_potezi == self.vmesnik.igralec2:
             barva = self.vmesnik.igralec2.barva
         if self.veljavna_poteza(x, y):
-            # self.shrani_pozicijo()
+            self.shrani_pozicijo()
             k, i, j = self.doloci_crto(x, y)
             self.vmesnik.narisi_crto(k, i, j, barva)
             if k == "vodoravno":
@@ -64,10 +66,11 @@ class Igra():
             p = self.poln_kvadratek(k, i, j)
             if p == 0:
                 self.sprememba_igralca()
-            if self.na_potezi == self.vmesnik.igralec1:
-                self.vmesnik.igralec1.igraj()
-            if self.na_potezi == self.vmesnik.igralec2:
-                self.vmesnik.igralec2.igraj()
+            if not self.konec:
+                if self.na_potezi == self.vmesnik.igralec1:
+                    self.vmesnik.igralec1.igraj()
+                elif self.na_potezi == self.vmesnik.igralec2:
+                    self.vmesnik.igralec2.igraj()
 
     def racunalnik_povleci_potezo(self, poteza):
         k, i, j = poteza
@@ -87,13 +90,18 @@ class Igra():
     def navidezno_povleci_potezo(self, p):
         """ navidezno povlece potezo pri minimaxu """
         k, i, j = p
-        self.shrani_pozicijo()
+        self.shrani_navidezno_pozicijo()
         if k == "vodoravno":
             self.vodoravne[i][j] = True
         else:
             self.navpicne[i][j] = True
         p = self.popravi_matriko_kvadratov(k, i, j)
         if p:
+            if self.na_potezi == self.jaz:
+                self.jaz_stevec += p
+            elif self.na_potezi == self.nasprotnik:
+                self.nasprotnik_stevec += p
+        else:
             if self.na_potezi == self.jaz:
                 self.na_potezi = self.nasprotnik
             elif self.na_potezi == self.nasprotnik:
@@ -114,6 +122,7 @@ class Igra():
                 if self.vodoravne[i-1][j]:
                     if self.navpicne[i-1][j]:
                         if self.navpicne[i-1][j+1]:
+                            time.sleep(0.5)
                             self.vmesnik.pobarvaj_kvadratek(i, j+1, barva)
                             p = 1
                             stevec.set(stevec.get()+1)
@@ -121,6 +130,7 @@ class Igra():
                 if self.vodoravne[i+1][j]:
                     if self.navpicne[i][j]:
                         if self.navpicne[i][j+1]:
+                            time.sleep(0.5)
                             self.vmesnik.pobarvaj_kvadratek(i+1, j+1, barva)
                             p = 1
                             stevec.set(stevec.get()+1)
@@ -129,6 +139,7 @@ class Igra():
                 if self.navpicne[i][j-1]:
                     if self.vodoravne[i][j-1]:
                         if self.vodoravne[i+1][j-1]:
+                            time.sleep(0.5)
                             self.vmesnik.pobarvaj_kvadratek(i+1, j, barva)
                             p = 1
                             stevec.set(stevec.get()+1)
@@ -136,11 +147,13 @@ class Igra():
                 if self.navpicne[i][j+1]:
                     if self.vodoravne[i][j]:
                         if self.vodoravne[i+1][j]:
+                            time.sleep(0.5)
                             self.vmesnik.pobarvaj_kvadratek(i+1, j+1, barva)
                             p = 1
                             stevec.set(stevec.get()+1)
         if self.konec_igre():
             self.vmesnik.zmaga()
+            self.konec = True
         else:
             return p
 
@@ -154,14 +167,16 @@ class Igra():
 
     def kopija(self):
         """Vrni kopijo te igre"""
-        self.shrani_pozicijo()
+        # self.shrani_pozicijo()
         kopija = Igra(None)
         kopija.vodoravne = [self.vodoravne[i][:] for i in range(8)]
         kopija.navpicne = [self.navpicne[i][:] for i in range(7)]
         kopija.matrika_kvadratov = [self.matrika_kvadratov[i][:] for i in range(7)]
         kopija.na_potezi = self.na_potezi.ime.get()
-        kopija.nasprotnik = "nasprotnik"
+        kopija.nasprotnik = self.nasprotnik().ime.get()
         kopija.jaz = kopija.na_potezi
+        kopija.jaz_stevec = self.na_potezi.stevec.get()
+        kopija.nasprotnik_stevec = self.nasprotnik().stevec.get()
         kopija.zgodovina = self.zgodovina
         return kopija
 
@@ -171,25 +186,32 @@ class Igra():
         vodoravne = [self.vodoravne[i][:] for i in range(8)]
         navpicne = [self.navpicne[i][:] for i in range(7)]
         kvadrati = [self.matrika_kvadratov[i][:] for i in range(7)]
-        self.zgodovina.append((vodoravne, navpicne, kvadrati, self.na_potezi))
+        self.zgodovina.append((vodoravne, navpicne, kvadrati, self.na_potezi, self.vmesnik.igralec1.stevec.get(), self.vmesnik.igralec2.stevec.get()))
+
+    def shrani_navidezno_pozicijo(self):
+        """Shrani trenutno pozicijo, da se bomo lahko kasneje vrnili vanjo
+           z metodo razveljavi."""
+        vodoravne = [self.vodoravne[i][:] for i in range(8)]
+        navpicne = [self.navpicne[i][:] for i in range(7)]
+        kvadrati = [self.matrika_kvadratov[i][:] for i in range(7)]
+        self.zgodovina.append((vodoravne, navpicne, kvadrati, self.na_potezi, self.jaz_stevec, self.nasprotnik_stevec))
 
     def razveljavi(self):
         """Razveljavi potezo in se vrni v prejsnje stanje."""
-        (self.vodoravne, self.navpicne,self.matrika_kvadratov, self.na_potezi) = self.zgodovina.pop()
+        (self.vodoravne, self.navpicne,self.matrika_kvadratov, self.na_potezi, self.jaz_stevec, self.nasprotnik_stevec) = self.zgodovina.pop()
 
     def veljavne_poteze(self):
         """Vrni seznam veljavnih potez."""
-        v_poteze = []
-        n_poteze = []
+        poteze = []
         for i in range(8):
             for j in range(7):
                 if not self.vodoravne[i][j]:
-                    v_poteze.append((i, j))
+                    poteze.append(("vodoravno", i, j))
         for i in range(7):
             for j in range(8):
                 if not self.navpicne[i][j]:
-                    n_poteze.append((i, j))
-        return v_poteze, n_poteze
+                    poteze.append(("navpicno", i, j))
+        return poteze
 
     def popravi_matriko_kvadratov(self, k, i, j):
         p = 0
@@ -212,3 +234,9 @@ class Igra():
                 if self.matrika_kvadratov[i][j] == 4:
                     p += 1
         return p
+
+    def nasprotnik(self):
+        if self.na_potezi == self.vmesnik.igralec1:
+            return self.vmesnik.igralec2
+        elif self.na_potezi == self.vmesnik.igralec2:
+            return self.vmesnik.igralec1

@@ -3,9 +3,10 @@ __author__ = 'KorosecN13'
 # Pikice in skatle
 from tkinter import *
 from igra import Igra
-from igralci import Clovek
-from igralci import Racunalnik
-from igralci import Minimax
+from igralci2 import Clovek
+from igralci2 import Racunalnik
+from igralci2 import Minimax
+from igralci2 import AlfaBeta
 
 
 class Vmesnik():
@@ -15,7 +16,7 @@ class Vmesnik():
     def __init__(self, master):
         self.master = master
 
-        # Ozadje        
+        # Ozadje
         master.configure(background='gold3')
 
         # Glavni meni
@@ -39,8 +40,8 @@ class Vmesnik():
         nova_igra_menu.add_command(label="človek : računalnik",
                                    command=lambda: self.zacni_igro(Clovek(self, self.ime_igralec1, self.stevec_igralec1,
                                                                           self.barva1),
-                                                                   Racunalnik(self, self.ime_igralec1,
-                                                                              self.stevec_igralec2, self.barva2, Minimax(2))))
+                                                                   Racunalnik(self, self.ime_igralec2,
+                                                                              self.stevec_igralec2, self.barva2, AlfaBeta(2))))
         nova_igra_menu.add_command(label="računalnik : človek",
                                    command=lambda: self.zacni_igro(Racunalnik(self, self.ime_igralec1,
                                                                               self.stevec_igralec1, self.barva1, Minimax(2)),
@@ -48,9 +49,9 @@ class Vmesnik():
                                                                           self.barva2)))
         nova_igra_menu.add_command(label="računalnik : računalnik",
                                    command=lambda: self.zacni_igro(Racunalnik(self, self.ime_igralec1,
-                                                                              self.stevec_igralec1, self.barva1, Minimax(2)),
+                                                                              self.stevec_igralec1, self.barva1, AlfaBeta(2)),
                                                                    Racunalnik(self, self.ime_igralec2,
-                                                                              self.stevec_igralec2, self.barva2, Minimax(2))))
+                                                                              self.stevec_igralec2, self.barva2, AlfaBeta(2))))
 
         # Dodamo izbiro v zapri_menu
         zapri_menu.add_command(label="Izhod", command=master.destroy)
@@ -114,7 +115,7 @@ class Vmesnik():
 
         # zacnemo igro proti racunalniku
         self.zacni_igro(Clovek(self, self.ime_igralec1, self.stevec_igralec1, self.barva1),
-                        Racunalnik(self, self.ime_igralec1, self.stevec_igralec2, self.barva2, Minimax(2)))
+                        Racunalnik(self, self.ime_igralec2, self.stevec_igralec2, self.barva2, AlfaBeta(2)))
 
     def zacni_igro(self, igralec1, igralec2):
         """ nastavi stanje igra na zacetek """
@@ -142,8 +143,8 @@ class Vmesnik():
         # Shranimo igralce
         self.igralec1 = igralec1
         self.igralec2 = igralec2
-        igralec1.igra = self.igra
-        igralec2.igra = self.igra
+        self.igralec1.igra = self.igra
+        self.igralec2.igra = self.igra
         # nastavimo stevce na 0
         self.stevec_igralec1.set(0)
         self.stevec_igralec2.set(0)
@@ -168,9 +169,7 @@ class Vmesnik():
         else:
             self.polje.create_line(50*(j+1), 50*(i+1)+5, 50*(j+1), 50*(i+2)-5,
                                    fill=barva, width=3, tag=Vmesnik.TAG_FIGURE)
-
         self.master.update_idletasks()
-
 
     def pobarvaj_kvadratek(self, j, i, barva):
         """ pobarva zaprt kvadratek na igralnem polju """
