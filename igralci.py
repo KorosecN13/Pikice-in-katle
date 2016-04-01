@@ -263,10 +263,16 @@ class AlfaBeta:
                     seznam = []
                     veljavne = self.igra.veljavne_poteze()
                     random.shuffle(veljavne)
+                    nepotrebne_poteze = []
                     if sum([x.count(3) for x in self.igra.matrika_kvadratov]):
-                        poteze = self.najdi_vse(3, self.igra.matrika_kvadratov)
-                        for poteza in poteze:
-                            veljavne.insert(0, veljavne.pop(veljavne.index(poteza)))
+                        kvadrati = self.najdi_vse(3, self.igra.matrika_kvadratov)
+                        for i, j in kvadrati:
+                            veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
+                            poteze = self.najdi_verigo((i, j))
+                            if len(poteze) > 2:
+                                nepotrebne_poteze += poteze[1:-1]
+                    for poteza in set(nepotrebne_poteze):
+                        del veljavne[veljavne.index(poteza)]
                     for k, i, j in veljavne:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -287,10 +293,16 @@ class AlfaBeta:
                     vrednost_najboljse = Minimax.NESKONCNO
                     veljavne = self.igra.veljavne_poteze()
                     random.shuffle(veljavne)
+                    nepotrebne_poteze = []
                     if sum([x.count(3) for x in self.igra.matrika_kvadratov]):
-                        poteze = self.najdi_vse(3, self.igra.matrika_kvadratov)
-                        for poteza in poteze:
-                            veljavne.insert(0, veljavne.pop(veljavne.index(poteza)))
+                        kvadrati = self.najdi_vse(3, self.igra.matrika_kvadratov)
+                        for i, j in kvadrati:
+                            veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
+                            poteze = self.najdi_verigo((i, j))
+                            if len(poteze) > 2:
+                                nepotrebne_poteze += poteze[1:-1]
+                    for poteza in set(nepotrebne_poteze):
+                        del veljavne[veljavne.index(poteza)]
                     for k, i, j in veljavne:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -353,10 +365,7 @@ class AlfaBeta:
                 j = seznam[n].index(element)
                 i = n
                 kvadrati += [(i, j)]
-        poteze = []
-        for i, j in kvadrati:
-            poteze += [self.prazna_stranica(i, j)]
-        return poteze
+        return kvadrati
 
     def prazna_stranica(self, i, j):
         if not self.igra.vodoravne[i][j]:
@@ -367,3 +376,32 @@ class AlfaBeta:
             return "navpicno", i, j
         elif not self.igra.navpicne[i][j+1]:
             return "navpicno", i, j+1
+
+    def najdi_verigo(self, index):
+        """ najde poteze s katerimi napolnimo odprto verigo, ki ji pripada kvadratek (i, j) """
+        i, j = index
+        poteze = []
+        while self.igra.matrika_kvadratov[i][j] == 3:
+            if not self.igra.vodoravne[i][j]:
+                self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
+                poteze += [("vodoravno", i, j)]
+                if i != 0:
+                    i -= 1
+            elif not self.igra.vodoravne[i+1][j]:
+                self.igra.navidezno_povleci_potezo(("vodoravno", i+1, j))
+                poteze += [("vodoravno", i+1, j)]
+                if i != 6:
+                    i += 1
+            elif not self.igra.navpicne[i][j]:
+                self.igra.navidezno_povleci_potezo(("navpicno", i, j))
+                poteze += [("navpicno", i, j)]
+                if j != 0:
+                    j -= 1
+            elif not self.igra.navpicne[i][j+1]:
+                self.igra.navidezno_povleci_potezo(("navpicno", i, j+1))
+                poteze += [("navpicno", i, j+1)]
+                if j != 6:
+                    j += 1
+        for i in range(len(poteze)):
+            self.igra.razveljavi()
+        return poteze
