@@ -3,10 +3,10 @@ __author__ = 'KorosecN13'
 # Pikice in skatle
 from tkinter import *
 from igra import Igra
-from igralci2 import Clovek
-from igralci2 import Racunalnik
-from igralci2 import Minimax
-from igralci2 import AlfaBeta
+from igralci import Clovek
+from igralci import Racunalnik
+from igralci import Minimax
+from igralci import AlfaBeta
 
 
 class Vmesnik():
@@ -23,7 +23,7 @@ class Vmesnik():
         menu = Menu(master)
         master.config(menu=menu)
 
-        master.protocol("WM_DELETE_WINDOW", master.destroy)
+        master.protocol("WM_DELETE_WINDOW", lambda: self.zapri_okno(master))
 
         # Ustvarimo menija
         nova_igra_menu = Menu(menu)
@@ -56,7 +56,7 @@ class Vmesnik():
                                                                               self.stevec_igralec2, self.barva2, AlfaBeta(2))))
 
         # Dodamo izbiro v zapri_menu
-        zapri_menu.add_command(label="Izhod", command=master.destroy)
+        zapri_menu.add_command(label="Izhod", command=lambda: self.zapri_okno(master))
 
         # Velikost polja
         self.vrstice = 8
@@ -124,6 +124,7 @@ class Vmesnik():
 
     def zacni_igro(self, igralec1, igralec2):
         """ nastavi stanje igra na zacetek """
+        self.prekini_igralce()
         if type(igralec1) == Racunalnik:
             if type(igralec2) == Racunalnik:
                 self.ime_igralec2.set("Racunalnik 2")
@@ -157,6 +158,11 @@ class Vmesnik():
         self.igralec1.igraj()
         self.napis.set("Na potezi je {0}.".format(self.igralec1.ime.get()))
 
+    def zapri_okno(self, master):
+        """zapre okno in ustavi razmisljanje igralcev"""
+        self.prekini_igralce()
+        master.destroy()
+
     def polje_klik(self, event):
         """ poklice ustrezno fukcijo klik - za cloveka ali racunalnik """
         x, y = event.x, event.y
@@ -181,6 +187,13 @@ class Vmesnik():
         """ pobarva zaprt kvadratek na igralnem polju """
         self.polje.create_rectangle(50*i+5, 50*j+5, 50*i+45, 50*j+45, fill=barva, width=0, tag=Vmesnik.TAG_FIGURE)
         self.master.update_idletasks()
+
+    def prekini_igralce(self):
+        """Sporoči igralcem, da morajo nehati razmišljati."""
+        if self.igralec1:
+            self.igralec1.prekini()
+        if self.igralec2:
+            self.igralec2.prekini()
 
     def zmaga(self):
         """ izpise kdo je zmagovalec """
