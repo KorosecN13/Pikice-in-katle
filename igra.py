@@ -15,8 +15,10 @@ class Igra():
     def sprememba_igralca(self):
         if self.na_potezi == self.vmesnik.igralec1:
             self.na_potezi = self.vmesnik.igralec2
+            self.vmesnik.napis.set("Na potezi je {0}.".format(self.vmesnik.igralec2.ime.get()))
         elif self.na_potezi == self.vmesnik.igralec2:
             self.na_potezi = self.vmesnik.igralec1
+            self.vmesnik.napis.set("Na potezi je {0}.".format(self.vmesnik.igralec1.ime.get()))
 
     def doloci_crto(self, x, y):
         """ doloci crto, ki je najblizja koordinatam miske """

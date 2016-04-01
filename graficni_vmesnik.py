@@ -23,6 +23,8 @@ class Vmesnik():
         menu = Menu(master)
         master.config(menu=menu)
 
+        master.protocol("WM_DELETE_WINDOW", master.destroy)
+
         # Ustvarimo menija
         nova_igra_menu = Menu(menu)
         zapri_menu = Menu(menu)
@@ -62,7 +64,7 @@ class Vmesnik():
 
         # Igralno polje
         self.polje = Canvas(master, width=450, height=450)
-        self.polje.grid(columnspan=2, row=3, column=0)
+        self.polje.grid(columnspan=2, row=4, column=0)
 
         # prilagodi velikost vrstic in stolpcev, če spremenimo velikost okna
         for i in range(2):
@@ -113,6 +115,9 @@ class Vmesnik():
         # kaj se zgodi ob kliku na igralno polje
         self.polje.bind('<Button-1>', self.polje_klik)
 
+        self.napis = StringVar(self.master, value = "")
+        Label(master, textvariable=self.napis, background='gold3', width=20, anchor=W, justify=LEFT).grid(row=3, column=0, columnspan=2)
+
         # zacnemo igro proti racunalniku
         self.zacni_igro(Clovek(self, self.ime_igralec1, self.stevec_igralec1, self.barva1),
                         Racunalnik(self, self.ime_igralec2, self.stevec_igralec2, self.barva2, AlfaBeta(2)))
@@ -150,6 +155,7 @@ class Vmesnik():
         self.stevec_igralec2.set(0)
         self.igra.na_potezi = self.igralec1
         self.igralec1.igraj()
+        self.napis.set("Na potezi je {0}.".format(self.igralec1.ime.get()))
 
     def polje_klik(self, event):
         """ poklice ustrezno fukcijo klik - za cloveka ali racunalnik """
@@ -187,6 +193,7 @@ class Vmesnik():
                               text='Zmagal je')
         self.polje.itemconfig(self.polje.create_text(225, 250, font=("Purisa", 20), tag=Vmesnik.TAG_FIGURE),
                               text='{0}'.format(zmagovalec))
+        self.napis.set("")
 
 
 root = Tk()
