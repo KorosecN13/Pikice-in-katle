@@ -23,6 +23,7 @@ class Vmesnik():
         menu = Menu(master)
         master.config(menu=menu)
 
+        # kaj se zgodi, ko uporabnik zapre okno
         master.protocol("WM_DELETE_WINDOW", lambda: self.zapri_okno(master))
 
         # Ustvarimo menija
@@ -115,7 +116,8 @@ class Vmesnik():
         # kaj se zgodi ob kliku na igralno polje
         self.polje.bind('<Button-1>', self.polje_klik)
 
-        self.napis = StringVar(self.master, value = "")
+        # napis, ki izpise kateri igralec je trenutno na potezi
+        self.napis = StringVar(self.master, value="")
         Label(master, textvariable=self.napis, background='gold3', width=20, anchor=W, justify=LEFT).grid(row=3, column=0, columnspan=2)
 
         # zacnemo igro proti racunalniku
@@ -123,8 +125,10 @@ class Vmesnik():
                         Racunalnik(self, self.ime_igralec2, self.stevec_igralec2, self.barva2, AlfaBeta(2)))
 
     def zacni_igro(self, igralec1, igralec2):
-        """ nastavi stanje igra na zacetek """
+        """ nastavi stanje igre na zacetek """
+        # prekinemo trenutno razmisljanje igralcev
         self.prekini_igralce()
+        # po potrebi spremenimo ime igralcev
         if type(igralec1) == Racunalnik:
             if type(igralec2) == Racunalnik:
                 self.ime_igralec2.set("Racunalnik 2")
@@ -149,11 +153,13 @@ class Vmesnik():
         # Shranimo igralce
         self.igralec1 = igralec1
         self.igralec2 = igralec2
+        # nastavimo igro igralcem
         self.igralec1.igra = self.igra
         self.igralec2.igra = self.igra
         # nastavimo stevce na 0
         self.stevec_igralec1.set(0)
         self.stevec_igralec2.set(0)
+        # igro zacne prvi igralec
         self.igra.na_potezi = self.igralec1
         self.igralec1.igraj()
         self.napis.set("Na potezi je {0}.".format(self.igralec1.ime.get()))
@@ -168,7 +174,7 @@ class Vmesnik():
         x, y = event.x, event.y
         if self.igra.na_potezi == self.igralec1:
             self.igralec1.klik(x, y)
-        if self.igra.na_potezi == self.igralec2:
+        elif self.igra.na_potezi == self.igralec2:
             self.igralec2.klik(x, y)
         else:
             pass
