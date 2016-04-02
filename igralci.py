@@ -18,6 +18,8 @@ class Clovek():
         pass
 
     def prekini(self):
+        """ To metodo kliče vmesnik, če je treba prekiniti razmišljanje.
+        Človek jo lahko ignorira. """
         pass
 
     def klik(self, x, y):
@@ -36,30 +38,32 @@ class Racunalnik():
         self.mislec = None
 
     def igraj(self):
-        """Igraj potezo, ki jo vrne algoritem."""
+        """ algoritmu ukaze naj razmisli poteze """
         self.mislec = threading.Thread(
             target=lambda: self.algoritem.izracunaj_potezo(self.vmesnik.igra.kopija()))
         self.mislec.start()
+        # cez 100ms preveri ali je algoritem ze izracunal poteze
         self.vmesnik.polje.after(100, self.preveri_potezo)
 
     def preveri_potezo(self):
-        """Vsakih 100ms preveri, ali je algoritem ze izracunal potezo."""
+        """ Vsakih 100ms preveri, ali je algoritem ze izracunal poteze in jih odigra """
         seznam_potez = self.algoritem.poteze
         if seznam_potez is not None:
-            # Algoritem je nasel potezo, povleci jo, ce ni bilo prekinitve
+            # Algoritem je nasel poteze, povleci jih, ce ni bilo prekinitve
             while seznam_potez:
                 self.vmesnik.igra.racunalnik_povleci_potezo(seznam_potez.pop())
                 time.sleep(0.5)
+            # Vzporedno vlakno ni več aktivno, zato ga "pozabimo"
             self.mislec = None
             self.igra.sprememba_igralca()
+            # ce igre se ni konec, poklice metodo, ki odigra naslednjo potezo nasprotnika
             if not self.igra.konec:
                 if self.igra.na_potezi == self.vmesnik.igralec1:
                     self.vmesnik.igralec1.igraj()
                 if self.igra.na_potezi == self.vmesnik.igralec2:
                     self.vmesnik.igralec2.igraj()
-            # Vzporedno vlakno ni vec aktivno, zato ga "pozabimo"
         else:
-            # Algoritem se ni nasel poteze, preveri se enkrat cez 100ms
+            # Algoritem se ni nasel potez, preveri se enkrat cez 100ms
             self.vmesnik.polje.after(100, self.preveri_potezo)
 
     def prekini(self):
@@ -118,9 +122,13 @@ class Minimax:
             # Igre ni konec
             if globina == 0:
                 st_potez = 0
+                # ce je igralec v polju pustil kaksen kvadrat s tremi ze odigranimi stranicami,
+                # nasprotnik odigra poteze s katerimi napolni verigo, ki ji pripada ta kvadrat
                 while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
                     st_potez += self.napolni_verigo(self.najdi(3, self.igra.matrika_kvadratov))
                 vrednost_pozicije = self.vrednost_pozicije()
+                # ker smo v procesu napolnjevanja verig oddigrali nekaj potez,
+                # jih moramo zdaj se razveljaviti, da pridemo na prejsnje stanje
                 for i in range(st_potez):
                     self.igra.razveljavi()
                 return vrednost_pozicije, seznam_potez
@@ -130,14 +138,29 @@ class Minimax:
                     # Maksimiziramo
                     najboljsa_poteza = None
                     vrednost_najboljse = -Minimax.NESKONCNO
-                    seznam = []
+                    seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     veljavne = self.igra.veljavne_poteze()
                     random.shuffle(veljavne)
+                    nepotrebne_poteze = []  # v verigah ima vec potez enako vrednost, zato nima smisla, da racunalnik vsako posebej racuna
+                    # v verigah, ki jih lahko igralec v tem trenutku napolni, poisce 'srednje' poteze
+                    # in jih oznaci kot nepotrebne
+                    if sum([x.count(3) for x in self.igra.matrika_kvadratov]):
+                        kvadrati = self.najdi_vse(3, self.igra.matrika_kvadratov)
+                        for i, j in kvadrati:
+                            veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
+                            poteze = self.najdi_verigo((i, j))
+                            if len(poteze) > 2:
+                                nepotrebne_poteze += poteze[1:-1]
+                    # iz seznama veljavnih potez izbrise nepotrebne poteze
+                    for poteza in set(nepotrebne_poteze):
+                        del veljavne[veljavne.index(poteza)]
                     for k, i, j in veljavne:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
+                            # ce je napolnil kaksen kvadratek, je igralec spet na vrsti
                             vrednost, s = self.minimax(globina, maksimiziramo, seznam_potez)
                         else:
+                            # ce ni napolnil nobenega kvadratka, je na vrsti drugi igralec
                             vrednost, s = self.minimax(globina-1, not maksimiziramo, seznam_potez)
                         self.igra.razveljavi()
                         if vrednost > vrednost_najboljse:
@@ -151,6 +174,16 @@ class Minimax:
                     seznam = []
                     veljavne = self.igra.veljavne_poteze()
                     random.shuffle(veljavne)
+                    nepotrebne_poteze = []
+                    if sum([x.count(3) for x in self.igra.matrika_kvadratov]):
+                        kvadrati = self.najdi_vse(3, self.igra.matrika_kvadratov)
+                        for i, j in kvadrati:
+                            veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
+                            poteze = self.najdi_verigo((i, j))
+                            if len(poteze) > 2:
+                                nepotrebne_poteze += poteze[1:-1]
+                    for poteza in set(nepotrebne_poteze):
+                        del veljavne[veljavne.index(poteza)]
                     for k, i, j in veljavne:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -163,14 +196,16 @@ class Minimax:
                             najboljsa_poteza = k, i, j
                 assert (najboljsa_poteza is not None), "minimax: izracunana poteza je None"
                 if globina == self.globina:
+                    # ce je globina enaka zacetni globini, smo dobili potezo, ki jo bo igralec odigral
                     seznam_potez = seznam + [najboljsa_poteza]
                 return vrednost_najboljse, seznam_potez
 
     def vrednost_pozicije(self):
+        """Ocena vrednosti pozicije: izracuna razliko med kvadrati trenutnega igralca in nasprotnika."""
         return self.igra.jaz_stevec - self.igra.nasprotnik_stevec
 
     def napolni_verigo(self, index):
-        """ napolni odprto verigo, ki ji pripada kvadratek (i, j) """
+        """ napolni odprto verigo, ki ji pripada kvadratek (i, j) in vrne stevilo potez, ki jih je pri tem odigral"""
         i, j = index
         st_potez = 0
         while self.kopija_matrika_kvadratov[i][j] == 3:
@@ -193,14 +228,65 @@ class Minimax:
                     j += 1
         return st_potez
 
-    def najdi(self, element, seznam):
+    def najdi(self, element, matrika):
+        """ najde mesto prve pojavitve elementa v matriki """
         i, j = None, None
-        for n, vrs in enumerate(seznam):
-            if seznam[n].count(element):
-                j = seznam[n].index(element)
+        for n, vrs in enumerate(matrika):
+            if vrs.count(element):
+                j = vrs.index(element)
                 i = n
                 break
         return i, j
+
+    def najdi_vse(self, element, matrika):
+        """ najde vsa mesta pojavitve elementa v matriki """
+        kvadrati = []
+        for n, vrs in enumerate(matrika):
+            if vrs.count(element):
+                j = vrs.index(element)
+                i = n
+                kvadrati += [(i, j)]
+        return kvadrati
+
+    def prazna_stranica(self, i, j):
+        """ najde prazno stranico v kvadratu (i, j), ki ima 3 polne stranice """
+        if not self.igra.vodoravne[i][j]:
+            return "vodoravno", i, j
+        elif not self.igra.vodoravne[i+1][j]:
+            return "vodoravno", i+1, j
+        elif not self.igra.navpicne[i][j]:
+            return "navpicno", i, j
+        elif not self.igra.navpicne[i][j+1]:
+            return "navpicno", i, j+1
+
+    def najdi_verigo(self, index):
+        """ najde poteze s katerimi napolnimo odprto verigo, ki ji pripada kvadratek (i, j) """
+        i, j = index
+        poteze = []
+        while self.igra.matrika_kvadratov[i][j] == 3:
+            if not self.igra.vodoravne[i][j]:
+                self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
+                poteze += [("vodoravno", i, j)]
+                if i != 0:
+                    i -= 1
+            elif not self.igra.vodoravne[i+1][j]:
+                self.igra.navidezno_povleci_potezo(("vodoravno", i+1, j))
+                poteze += [("vodoravno", i+1, j)]
+                if i != 6:
+                    i += 1
+            elif not self.igra.navpicne[i][j]:
+                self.igra.navidezno_povleci_potezo(("navpicno", i, j))
+                poteze += [("navpicno", i, j)]
+                if j != 0:
+                    j -= 1
+            elif not self.igra.navpicne[i][j+1]:
+                self.igra.navidezno_povleci_potezo(("navpicno", i, j+1))
+                poteze += [("navpicno", i, j+1)]
+                if j != 6:
+                    j += 1
+        for i in range(len(poteze)):
+            self.igra.razveljavi()
+        return poteze
 
 
 class AlfaBeta:
@@ -246,24 +332,29 @@ class AlfaBeta:
         else:
             # Igre ni konec
             if globina == 0:
-                a = [self.igra.matrika_kvadratov[i][:] for i in range(7)]
                 st_potez = 0
+                # ce je igralec v polju pustil kaksen kvadrat s tremi ze odigranimi stranicami,
+                # nasprotnik odigra poteze s katerimi napolni verigo, ki ji pripada ta kvadrat
                 while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
                     st_potez += self.napolni_verigo(self.najdi(3, self.igra.matrika_kvadratov))
                 vrednost_pozicije = self.vrednost_pozicije()
+                # ker smo v procesu napolnjevanja verig oddigrali nekaj potez,
+                # jih moramo zdaj se razveljaviti, da pridemo na prejsnje stanje
                 for i in range(st_potez):
                     self.igra.razveljavi()
                 return vrednost_pozicije, seznam_potez
             else:
-                # Naredimo eno stopnjo minimax
+                # Naredimo eno stopnjo alfabeta
                 if maksimiziramo:
                     # Maksimiziramo
                     najboljsa_poteza = None
                     vrednost_najboljse = -Minimax.NESKONCNO
-                    seznam = []
+                    seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     veljavne = self.igra.veljavne_poteze()
                     random.shuffle(veljavne)
-                    nepotrebne_poteze = []
+                    nepotrebne_poteze = []  # v verigah ima vec potez enako vrednost, zato nima smisla, da racunalnik vsako posebej racuna
+                    # v verigah, ki jih lahko igralec v tem trenutku napolni, poisce 'srednje' poteze
+                    # in jih oznaci kot nepotrebne
                     if sum([x.count(3) for x in self.igra.matrika_kvadratov]):
                         kvadrati = self.najdi_vse(3, self.igra.matrika_kvadratov)
                         for i, j in kvadrati:
@@ -271,13 +362,16 @@ class AlfaBeta:
                             poteze = self.najdi_verigo((i, j))
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
+                    # iz seznama veljavnih potez izbrise nepotrebne poteze
                     for poteza in set(nepotrebne_poteze):
                         del veljavne[veljavne.index(poteza)]
                     for k, i, j in veljavne:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
+                            # ce je napolnil kaksen kvadratek, je igralec spet na vrsti
                             vrednost, s = self.alfabeta(globina, alfa, beta, maksimiziramo, seznam_potez)
                         else:
+                            # ce ni napolnil nobenega kvadratka, je na vrsti drugi igralec
                             vrednost, s = self.alfabeta(globina-1, alfa, beta, not maksimiziramo, seznam_potez)
                         self.igra.razveljavi()
                         alfa = max(alfa, vrednost)
@@ -318,14 +412,16 @@ class AlfaBeta:
                             break
                 assert (najboljsa_poteza is not None), "alfabeta: izracunana poteza je None"
                 if globina == self.globina:
+                    # ce je globina enaka zacetni globini, smo dobili potezo, ki jo bo igralec odigral
                     seznam_potez = seznam + [najboljsa_poteza]
                 return vrednost_najboljse, seznam_potez
 
     def vrednost_pozicije(self):
+        """Ocena vrednosti pozicije: izracuna razliko med kvadrati trenutnega igralca in nasprotnika."""
         return self.igra.jaz_stevec - self.igra.nasprotnik_stevec
 
     def napolni_verigo(self, index):
-        """ napolni odprto verigo, ki ji pripada kvadratek (i, j) """
+        """ napolni odprto verigo, ki ji pripada kvadratek (i, j) in vrne stevilo potez, ki jih je pri tem odigral"""
         i, j = index
         st_potez = 0
         while self.igra.matrika_kvadratov[i][j] == 3:
@@ -348,26 +444,28 @@ class AlfaBeta:
                     j += 1
         return st_potez
 
-    def najdi(self, element, seznam):
+    def najdi(self, element, matrika):
+        """ najde mesto prve pojavitve elementa v matriki """
         i, j = None, None
-        for n, vrs in enumerate(seznam):
-            if seznam[n].count(element):
-                j = seznam[n].index(element)
+        for n, vrs in enumerate(matrika):
+            if vrs.count(element):
+                j = vrs.index(element)
                 i = n
                 break
         return i, j
 
-    def najdi_vse(self, element, seznam):
-        i, j = None, None
+    def najdi_vse(self, element, matrika):
+        """ najde vsa mesta pojavitve elementa v matriki """
         kvadrati = []
-        for n, vrs in enumerate(seznam):
-            if seznam[n].count(element):
-                j = seznam[n].index(element)
+        for n, vrs in enumerate(matrika):
+            if vrs.count(element):
+                j = vrs.index(element)
                 i = n
                 kvadrati += [(i, j)]
         return kvadrati
 
     def prazna_stranica(self, i, j):
+        """ najde prazno stranico v kvadratu (i, j), ki ima 3 polne stranice """
         if not self.igra.vodoravne[i][j]:
             return "vodoravno", i, j
         elif not self.igra.vodoravne[i+1][j]:
