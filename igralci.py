@@ -86,9 +86,6 @@ class Minimax:
         self.igra = None
         self.jaz = None
         self.poteze = None
-        self.kopija_vodoravne = None
-        self.kopija_navpicne = None
-        self.kopija_matrika_kvadratov = None
 
     ZMAGA = 100000
     NESKONCNO = ZMAGA + 1
@@ -125,7 +122,7 @@ class Minimax:
                 # ce je igralec v polju pustil kaksen kvadrat s tremi ze odigranimi stranicami,
                 # nasprotnik odigra poteze s katerimi napolni verigo, ki ji pripada ta kvadrat
                 while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
-                    st_potez += self.napolni_verigo(self.najdi(3, self.igra.matrika_kvadratov))
+                    st_potez += len(self.najdi_verigo((self.najdi(3, self.igra.matrika_kvadratov))))
                 vrednost_pozicije = self.vrednost_pozicije()
                 # ker smo v procesu napolnjevanja verig oddigrali nekaj potez,
                 # jih moramo zdaj se razveljaviti, da pridemo na prejsnje stanje
@@ -149,6 +146,8 @@ class Minimax:
                         for i, j in kvadrati:
                             veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
                             poteze = self.najdi_verigo((i, j))
+                            for m in range(len(poteze)):
+                                self.igra.razveljavi()
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
                     # iz seznama veljavnih potez izbrise nepotrebne poteze
@@ -180,6 +179,8 @@ class Minimax:
                         for i, j in kvadrati:
                             veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
                             poteze = self.najdi_verigo((i, j))
+                            for m in range(len(poteze)):
+                                self.igra.razveljavi()
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
                     for poteza in set(nepotrebne_poteze):
@@ -203,30 +204,6 @@ class Minimax:
     def vrednost_pozicije(self):
         """Ocena vrednosti pozicije: izracuna razliko med kvadrati trenutnega igralca in nasprotnika."""
         return self.igra.jaz_stevec - self.igra.nasprotnik_stevec
-
-    def napolni_verigo(self, index):
-        """ napolni odprto verigo, ki ji pripada kvadratek (i, j) in vrne stevilo potez, ki jih je pri tem odigral"""
-        i, j = index
-        st_potez = 0
-        while self.kopija_matrika_kvadratov[i][j] == 3:
-            st_potez += 1
-            if not self.kopija_vodoravne[i][j]:
-                self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
-                if i != 0:
-                    i -= 1
-            elif not self.igra.vodoravne[i+1][j]:
-                self.igra.navidezno_povleci_potezo(("vodoravno", i+1, j))
-                if i != 6:
-                    i += 1
-            elif not self.igra.navpicne[i][j]:
-                self.igra.navidezno_povleci_potezo(("navpicno", i, j))
-                if j != 0:
-                    j -= 1
-            elif not self.igra.navpicne[i][j+1]:
-                self.igra.navidezno_povleci_potezo(("navpicno", i, j+1))
-                if j != 6:
-                    j += 1
-        return st_potez
 
     def najdi(self, element, matrika):
         """ najde mesto prve pojavitve elementa v matriki """
@@ -264,28 +241,19 @@ class Minimax:
         i, j = index
         poteze = []
         while self.igra.matrika_kvadratov[i][j] == 3:
-            if not self.igra.vodoravne[i][j]:
-                self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
-                poteze += [("vodoravno", i, j)]
-                if i != 0:
-                    i -= 1
-            elif not self.igra.vodoravne[i+1][j]:
-                self.igra.navidezno_povleci_potezo(("vodoravno", i+1, j))
-                poteze += [("vodoravno", i+1, j)]
-                if i != 6:
+            poteza = self.prazna_stranica(i, j)
+            self.igra.navidezno_povleci_potezo(poteza)
+            poteze += [poteza]
+            if poteza[0] == "vodoravno":
+                if (poteza[1] > i) and (i != 6):
                     i += 1
-            elif not self.igra.navpicne[i][j]:
-                self.igra.navidezno_povleci_potezo(("navpicno", i, j))
-                poteze += [("navpicno", i, j)]
-                if j != 0:
-                    j -= 1
-            elif not self.igra.navpicne[i][j+1]:
-                self.igra.navidezno_povleci_potezo(("navpicno", i, j+1))
-                poteze += [("navpicno", i, j+1)]
-                if j != 6:
+                elif (poteza[1] == i) and (i != 0):
+                    i -= 1
+            elif poteza[0] == "navpicno":
+                if (poteza[2] > j) and (j != 6):
                     j += 1
-        for i in range(len(poteze)):
-            self.igra.razveljavi()
+                elif (poteza[2] == j) and (j != 0):
+                    j -= 1
         return poteze
 
 
@@ -297,9 +265,6 @@ class AlfaBeta:
         self.igra = None
         self.jaz = None
         self.poteze = None
-        self.kopija_vodoravne = None
-        self.kopija_navpicne = None
-        self.kopija_matrika_kvadratov = None
 
     ZMAGA = 100000
     NESKONCNO = ZMAGA + 1
@@ -336,7 +301,7 @@ class AlfaBeta:
                 # ce je igralec v polju pustil kaksen kvadrat s tremi ze odigranimi stranicami,
                 # nasprotnik odigra poteze s katerimi napolni verigo, ki ji pripada ta kvadrat
                 while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
-                    st_potez += self.napolni_verigo(self.najdi(3, self.igra.matrika_kvadratov))
+                    st_potez += len(self.najdi_verigo((self.najdi(3, self.igra.matrika_kvadratov))))
                 vrednost_pozicije = self.vrednost_pozicije()
                 # ker smo v procesu napolnjevanja verig oddigrali nekaj potez,
                 # jih moramo zdaj se razveljaviti, da pridemo na prejsnje stanje
@@ -360,6 +325,8 @@ class AlfaBeta:
                         for i, j in kvadrati:
                             veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
                             poteze = self.najdi_verigo((i, j))
+                            for m in range(len(poteze)):
+                                self.igra.razveljavi()
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
                     # iz seznama veljavnih potez izbrise nepotrebne poteze
@@ -393,6 +360,8 @@ class AlfaBeta:
                         for i, j in kvadrati:
                             veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
                             poteze = self.najdi_verigo((i, j))
+                            for m in range(len(poteze)):
+                                self.igra.razveljavi()
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
                     for poteza in set(nepotrebne_poteze):
@@ -419,30 +388,6 @@ class AlfaBeta:
     def vrednost_pozicije(self):
         """Ocena vrednosti pozicije: izracuna razliko med kvadrati trenutnega igralca in nasprotnika."""
         return self.igra.jaz_stevec - self.igra.nasprotnik_stevec
-
-    def napolni_verigo(self, index):
-        """ napolni odprto verigo, ki ji pripada kvadratek (i, j) in vrne stevilo potez, ki jih je pri tem odigral"""
-        i, j = index
-        st_potez = 0
-        while self.igra.matrika_kvadratov[i][j] == 3:
-            st_potez += 1
-            if not self.igra.vodoravne[i][j]:
-                self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
-                if i != 0:
-                    i -= 1
-            elif not self.igra.vodoravne[i+1][j]:
-                self.igra.navidezno_povleci_potezo(("vodoravno", i+1, j))
-                if i != 6:
-                    i += 1
-            elif not self.igra.navpicne[i][j]:
-                self.igra.navidezno_povleci_potezo(("navpicno", i, j))
-                if j != 0:
-                    j -= 1
-            elif not self.igra.navpicne[i][j+1]:
-                self.igra.navidezno_povleci_potezo(("navpicno", i, j+1))
-                if j != 6:
-                    j += 1
-        return st_potez
 
     def najdi(self, element, matrika):
         """ najde mesto prve pojavitve elementa v matriki """
@@ -480,26 +425,17 @@ class AlfaBeta:
         i, j = index
         poteze = []
         while self.igra.matrika_kvadratov[i][j] == 3:
-            if not self.igra.vodoravne[i][j]:
-                self.igra.navidezno_povleci_potezo(("vodoravno", i, j))
-                poteze += [("vodoravno", i, j)]
-                if i != 0:
-                    i -= 1
-            elif not self.igra.vodoravne[i+1][j]:
-                self.igra.navidezno_povleci_potezo(("vodoravno", i+1, j))
-                poteze += [("vodoravno", i+1, j)]
-                if i != 6:
+            poteza = self.prazna_stranica(i, j)
+            self.igra.navidezno_povleci_potezo(poteza)
+            poteze += [poteza]
+            if poteza[0] == "vodoravno":
+                if (poteza[1] > i) and (i != 6):
                     i += 1
-            elif not self.igra.navpicne[i][j]:
-                self.igra.navidezno_povleci_potezo(("navpicno", i, j))
-                poteze += [("navpicno", i, j)]
-                if j != 0:
-                    j -= 1
-            elif not self.igra.navpicne[i][j+1]:
-                self.igra.navidezno_povleci_potezo(("navpicno", i, j+1))
-                poteze += [("navpicno", i, j+1)]
-                if j != 6:
+                elif (poteza[1] == i) and (i != 0):
+                    i -= 1
+            elif poteza[0] == "navpicno":
+                if (poteza[2] > j) and (j != 6):
                     j += 1
-        for i in range(len(poteze)):
-            self.igra.razveljavi()
+                elif (poteza[2] == j) and (j != 0):
+                    j -= 1
         return poteze
