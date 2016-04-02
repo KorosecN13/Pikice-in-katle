@@ -214,9 +214,12 @@ class Igra():
         kvadrati = [self.matrika_kvadratov[i][:] for i in range(7)]
         self.zgodovina.append((vodoravne, navpicne, kvadrati, self.na_potezi, self.jaz_stevec, self.nasprotnik_stevec))
 
-    def razveljavi(self):
-        """Razveljavi potezo in se vrni v prejsnje stanje."""
-        (self.vodoravne, self.navpicne, self.matrika_kvadratov, self.na_potezi, self.jaz_stevec, self.nasprotnik_stevec) = self.zgodovina.pop()
+    def razveljavi(self, k=1):
+        """k-krat razveljavi potezo in se vrni v prejsnje stanje."""
+        if k:
+            for i in range(k-1):
+                del self.zgodovina[-1]
+            (self.vodoravne, self.navpicne, self.matrika_kvadratov, self.na_potezi, self.jaz_stevec, self.nasprotnik_stevec) = self.zgodovina.pop()
 
     def veljavne_poteze(self):
         """Vrni seznam veljavnih potez."""

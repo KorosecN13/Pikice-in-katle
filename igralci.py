@@ -122,12 +122,11 @@ class Minimax:
                 # ce je igralec v polju pustil kaksen kvadrat s tremi ze odigranimi stranicami,
                 # nasprotnik odigra poteze s katerimi napolni verigo, ki ji pripada ta kvadrat
                 while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
-                    st_potez += len(self.najdi_verigo((self.najdi(3, self.igra.matrika_kvadratov))))
+                    st_potez += len(self.najdi_verigo(self.najdi(3, self.igra.matrika_kvadratov)))
                 vrednost_pozicije = self.vrednost_pozicije()
                 # ker smo v procesu napolnjevanja verig oddigrali nekaj potez,
                 # jih moramo zdaj se razveljaviti, da pridemo na prejsnje stanje
-                for i in range(st_potez):
-                    self.igra.razveljavi()
+                self.igra.razveljavi(st_potez)
                 return vrednost_pozicije, seznam_potez
             else:
                 # Naredimo eno stopnjo minimax
@@ -146,8 +145,7 @@ class Minimax:
                         for i, j in kvadrati:
                             veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
                             poteze = self.najdi_verigo((i, j))
-                            for m in range(len(poteze)):
-                                self.igra.razveljavi()
+                            self.igra.razveljavi(len(poteze))
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
                     # iz seznama veljavnih potez izbrise nepotrebne poteze
@@ -179,8 +177,7 @@ class Minimax:
                         for i, j in kvadrati:
                             veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
                             poteze = self.najdi_verigo((i, j))
-                            for m in range(len(poteze)):
-                                self.igra.razveljavi()
+                            self.igra.razveljavi(len(poteze))
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
                     for poteza in set(nepotrebne_poteze):
@@ -301,12 +298,11 @@ class AlfaBeta:
                 # ce je igralec v polju pustil kaksen kvadrat s tremi ze odigranimi stranicami,
                 # nasprotnik odigra poteze s katerimi napolni verigo, ki ji pripada ta kvadrat
                 while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
-                    st_potez += len(self.najdi_verigo((self.najdi(3, self.igra.matrika_kvadratov))))
+                    st_potez += len(self.najdi_verigo(self.najdi(3, self.igra.matrika_kvadratov)))
                 vrednost_pozicije = self.vrednost_pozicije()
                 # ker smo v procesu napolnjevanja verig oddigrali nekaj potez,
                 # jih moramo zdaj se razveljaviti, da pridemo na prejsnje stanje
-                for i in range(st_potez):
-                    self.igra.razveljavi()
+                self.igra.razveljavi(st_potez)
                 return vrednost_pozicije, seznam_potez
             else:
                 # Naredimo eno stopnjo alfabeta
@@ -325,8 +321,7 @@ class AlfaBeta:
                         for i, j in kvadrati:
                             veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
                             poteze = self.najdi_verigo((i, j))
-                            for m in range(len(poteze)):
-                                self.igra.razveljavi()
+                            self.igra.razveljavi(len(poteze))
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
                     # iz seznama veljavnih potez izbrise nepotrebne poteze
@@ -360,8 +355,7 @@ class AlfaBeta:
                         for i, j in kvadrati:
                             veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
                             poteze = self.najdi_verigo((i, j))
-                            for m in range(len(poteze)):
-                                self.igra.razveljavi()
+                            self.igra.razveljavi(len(poteze))
                             if len(poteze) > 2:
                                 nepotrebne_poteze += poteze[1:-1]
                     for poteza in set(nepotrebne_poteze):
