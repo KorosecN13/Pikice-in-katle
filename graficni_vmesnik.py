@@ -217,7 +217,7 @@ class Vmesnik():
             zmagovalec = self.igralec2.ime.get()
         self.polje.create_rectangle(100, 150, 350, 300, fill='green yellow', tag=Vmesnik.TAG_FIGURE)
         self.polje.itemconfig(self.polje.create_text(225, 200, font=("Purisa", 20), tag=Vmesnik.TAG_FIGURE),
-                              text='Zmagal je')
+                              text='Zmagal/a je')
         self.polje.itemconfig(self.polje.create_text(225, 250, font=("Purisa", 20), tag=Vmesnik.TAG_FIGURE),
                               text='{0}'.format(zmagovalec))
         self.napis.set("")
