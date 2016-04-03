@@ -181,11 +181,19 @@ class Vmesnik():
 
     def narisi_crto(self, k, i, j, barva):
         """ narisi crto med ustrezna krogca na igralnem polju """
+        if self.igra.crta:
+            # zbrise zadnjo poudarjeno potezo in jo narise nepoudarjeno
+            self.polje.delete(self.igra.poudarjena_crta)
+            self.igra.crta
         if k == 'vodoravno':
-            self.polje.create_line(50*(j+1)+5, 50*(i+1), 50*(j+2)-5, 50*(i+1),
+            self.igra.poudarjena_crta = self.polje.create_line(50*(j+1)+5, 50*(i+1), 50*(j+2)-5, 50*(i+1),
+                                   fill=barva, width=6, tag=Vmesnik.TAG_FIGURE)
+            self.igra.crta = self.polje.create_line(50*(j+1)+5, 50*(i+1), 50*(j+2)-5, 50*(i+1),
                                    fill=barva, width=3, tag=Vmesnik.TAG_FIGURE)
         else:
-            self.polje.create_line(50*(j+1), 50*(i+1)+5, 50*(j+1), 50*(i+2)-5,
+            self.igra.poudarjena_crta = self.polje.create_line(50*(j+1), 50*(i+1)+5, 50*(j+1), 50*(i+2)-5,
+                                   fill=barva, width=6, tag=Vmesnik.TAG_FIGURE)
+            self.igra.crta = self.polje.create_line(50*(j+1), 50*(i+1)+5, 50*(j+1), 50*(i+2)-5,
                                    fill=barva, width=3, tag=Vmesnik.TAG_FIGURE)
         self.master.update_idletasks()
 

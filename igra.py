@@ -11,6 +11,8 @@ class Igra():
         self.na_potezi = None
         self.zgodovina = []
         self.konec = False
+        self.poudarjena_crta = None
+        self.crta = None
 
     def sprememba_igralca(self):
         """ spremeni igralca, ki je na potezi """
