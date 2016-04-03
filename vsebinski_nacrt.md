@@ -2,7 +2,7 @@
 
 ## Opis delovanja aplikacije
 
-V glavnem oknu aplikacije dva igralca igrata Pikice in škatle. Vsak od igralcev je lahko človek ali računalnik. Človek svoje poteze vnaša tako, da z miško klikne na črto, ki jo želi povleči.
+V glavnem oknu aplikacije dva igralca igrata [Pikice in škatle] (https://en.wikipedia.org/wiki/Dots_and_Boxes). Vsak od igralcev je lahko človek ali računalnik. Človek svoje poteze vnaša tako, da z miško klikne na črto, ki jo želi povleči.
 
 Aplikacija je v enem od treh stanj:
 
@@ -34,6 +34,10 @@ Program je implementiran v Pythonu 3 in je sestavljen iz treh delov:
 
 3. **Igralci:** uporablja knjižnice [threading](https://docs.python.org/2/library/threading.html), [time](https://docs.python.org/2/library/time.html) in [random](https://docs.python.org/2/library/random.html)
 
+## Kako zaženemo program
+Glavni program poženemo tako, da odpremo datoteko graficni_vmesnik.py.
+Začetna nastavitev je igra igralca proti računalniku. Igralec lahko drugačno možnost igranja izbere v meniju nova igra.
+
 ## Razredi
 
 ### Razred `Vmesnik`
@@ -58,7 +62,7 @@ Objekt tega razreda shranjuje trenutno stanje igre. Ima naslednje metode:
 * `poln_kvadratek(self, k, i, j)`: pogleda, ali se je zaprl kateri od kvadratkov in vmeniku sporoči kateri kvadratrek naj pobarva
 * `konec_igre(self)`: po odigrani potezi pogleda ali je konec igre
 
-###$# Metode, namenjene računalnikovemu razmišljanju
+#### Metode, namenjene računalnikovemu razmišljanju
 * `kopija(self)`: vrne kopijo te igre 
 * `shrani_pozicijo(self)`: shrani trenutno pozicijo, da se bomo lahko kasneje vrnili vanjo z metodo razveljavi
 * `shrani_navidezno_pozicijo(self)`: shrani trenutno pozicijo, ki smo jo dobili v postopku računalnikovega računanja pozicije 
