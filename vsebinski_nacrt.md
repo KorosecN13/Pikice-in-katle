@@ -15,7 +15,7 @@ Aplikacija je v enem od treh stanj:
 2. Igra - med igro so v oknu naslednji podatki:
   * imena obeh igralcev
   * kdo je trenutno na potezi
-  * število pobarvanih kvadratkov
+  * število pobarvanih kvadratkov za posameznega igralca
 3. Konec igre - prikazuje napis, kdo je zmagovalec.
 
 Prehodi med stanji:
@@ -54,11 +54,11 @@ Objekt tega razreda shranjuje trenutno stanje igre. Ima naslednje metode:
 * `veljavna_poteza(self, x, y)`: preveri, ali je poteza veljavna
 * `povleci_potezo(self, x, y)`: vmesniku sporoči, katero črto naj nariše in kakšne barve mora biti
 * `racunalnik_povleci_potezo(self, poteza)`: povleče potezo, ki jo je izračunal računalnik
-* navidezno_povleci_potezo(self, p): navidezno povlece potezo pri minimaxu in vrne stevilo zaprtih kvadratov s to potezo
-* poln_kvadratek(self, k, i, j): pogleda, ali se je zaprl kateri od kvadratkov in vmeniku sporoči kateri kvadratrek naj pobarva
-* konec_igre(self): po odigrani potezi pogleda ali je konec igre
+* `navidezno_povleci_potezo(self, p)`: navidezno povlece potezo pri minimaxu in vrne stevilo zaprtih kvadratov s to potezo
+* `poln_kvadratek(self, k, i, j)`: pogleda, ali se je zaprl kateri od kvadratkov in vmeniku sporoči kateri kvadratrek naj pobarva
+* `konec_igre(self)`: po odigrani potezi pogleda ali je konec igre
 
-#### Metode, namenjene računalnikovemu razmišljanju
+###$# Metode, namenjene računalnikovemu razmišljanju
 * `kopija(self)`: vrne kopijo te igre 
 * `shrani_pozicijo(self)`: shrani trenutno pozicijo, da se bomo lahko kasneje vrnili vanjo z metodo razveljavi
 * `shrani_navidezno_pozicijo(self)`: shrani trenutno pozicijo, ki smo jo dobili v postopku računalnikovega računanja pozicije 
