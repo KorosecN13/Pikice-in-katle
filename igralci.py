@@ -313,19 +313,11 @@ class AlfaBeta:
                     seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     veljavne = self.igra.veljavne_poteze()
                     random.shuffle(veljavne)
-                    nepotrebne_poteze = []  # v verigah ima vec potez enako vrednost, zato nima smisla, da racunalnik vsako posebej racuna
-                    # v verigah, ki jih lahko igralec v tem trenutku napolni, poisce 'srednje' poteze
-                    # in jih oznaci kot nepotrebne
-                    if sum([x.count(3) for x in self.igra.matrika_kvadratov]):
-                        kvadrati = self.najdi_vse(3, self.igra.matrika_kvadratov)
-                        for i, j in kvadrati:
-                            veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
-                            poteze = self.najdi_verigo((i, j))
-                            self.igra.razveljavi(len(poteze))
-                            if len(poteze) > 2:
-                                nepotrebne_poteze += poteze[1:-1]
-                    # iz seznama veljavnih potez izbrise nepotrebne poteze
-                    for poteza in set(nepotrebne_poteze):
+                    nepotrebne_poteze, zapri_poteze, stevec_potez = self.nepotrebno()
+                    self.igra.razveljavi(stevec_potez)
+                    for poteza in zapri_poteze:
+                        veljavne.insert(0, veljavne.pop(veljavne.index(poteza)))
+                    for poteza in nepotrebne_poteze:
                         del veljavne[veljavne.index(poteza)]
                     for k, i, j in veljavne:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
@@ -349,16 +341,11 @@ class AlfaBeta:
                     vrednost_najboljse = Minimax.NESKONCNO
                     veljavne = self.igra.veljavne_poteze()
                     random.shuffle(veljavne)
-                    nepotrebne_poteze = []
-                    if sum([x.count(3) for x in self.igra.matrika_kvadratov]):
-                        kvadrati = self.najdi_vse(3, self.igra.matrika_kvadratov)
-                        for i, j in kvadrati:
-                            veljavne.insert(0, veljavne.pop(veljavne.index(self.prazna_stranica(i, j))))
-                            poteze = self.najdi_verigo((i, j))
-                            self.igra.razveljavi(len(poteze))
-                            if len(poteze) > 2:
-                                nepotrebne_poteze += poteze[1:-1]
-                    for poteza in set(nepotrebne_poteze):
+                    nepotrebne_poteze, zapri_poteze, stevec_potez = self.nepotrebno()
+                    self.igra.razveljavi(stevec_potez)
+                    for poteza in zapri_poteze:
+                        veljavne.insert(0, veljavne.pop(veljavne.index(poteza)))
+                    for poteza in nepotrebne_poteze:
                         del veljavne[veljavne.index(poteza)]
                     for k, i, j in veljavne:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
@@ -404,7 +391,7 @@ class AlfaBeta:
         return kvadrati
 
     def prazna_stranica(self, i, j):
-        """ najde prazno stranico v kvadratu (i, j), ki ima 3 polne stranice """
+        """ najde eno prazno stranico v kvadratu (i, j) """
         if not self.igra.vodoravne[i][j]:
             return "vodoravno", i, j
         elif not self.igra.vodoravne[i+1][j]:
@@ -423,13 +410,98 @@ class AlfaBeta:
             self.igra.navidezno_povleci_potezo(poteza)
             poteze += [poteza]
             if poteza[0] == "vodoravno":
-                if (poteza[1] > i) and (i != 6):
+                if (poteza[1] == i+1) and (i != 6):
                     i += 1
                 elif (poteza[1] == i) and (i != 0):
                     i -= 1
             elif poteza[0] == "navpicno":
-                if (poteza[2] > j) and (j != 6):
+                if (poteza[2] == j+1) and (j != 6):
                     j += 1
                 elif (poteza[2] == j) and (j != 0):
                     j -= 1
         return poteze
+
+    def nepotrebno(self):
+        """ poisce poteze, ki jih ni potrebno pregledati med iskanjem najboljse poteze """
+        nepotrebne_poteze = []
+        potrebne_poteze = []
+        zapri_poteze = []  # poteze, ki jih bo algoritem najprej pregledal
+        stevec_potez = 0
+        # v verigah, ki jih lahko v tem trenutku zacnemo zapirati, so potrebne poteze le prvi dve in zadnja
+        while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
+            i, j = self.najdi(3, self.igra.matrika_kvadratov)
+            zapri_poteze += [self.prazna_stranica(i, j)]
+            poteze = self.najdi_verigo((i, j))
+            zadnja_poteza = poteze[-1]
+            if zadnja_poteza[0] == "vodoravno":
+                e, f = zadnja_poteza[1], zadnja_poteza[2]
+                self.igra.vodoravne[e][f] = False
+                if e != 7:
+                    if self.igra.matrika_kvadratov[e][f] != 4:
+                        self.igra.matrika_kvadratov[e][f] -= 1
+                if e != 0:
+                    if self.igra.matrika_kvadratov[e-1][f] != 4:
+                        self.igra.matrika_kvadratov[e-1][f] -= 1
+            elif zadnja_poteza[0] == "navpicno":
+                e, f = zadnja_poteza[1], zadnja_poteza[2]
+                self.igra.navpicne[e][f] = False
+                if f != 7:
+                    if self.igra.matrika_kvadratov[e][f] != 4:
+                        self.igra.matrika_kvadratov[e][f] -= 1
+                if f != 0:
+                    if self.igra.matrika_kvadratov[e][f-1] != 4:
+                        self.igra.matrika_kvadratov[e][f-1] -= 1
+            if len(poteze) > 3:
+                nepotrebne_poteze += poteze[2:-1]
+                potrebne_poteze += poteze[:2]
+                potrebne_poteze += [poteze[-1]]
+            else:
+                potrebne_poteze += poteze
+            stevec_potez += len(poteze)
+        # v verigah, ki jih se ne moremo zapirati, je potrebna le ena poteza
+        while sum([x.count(2) for x in self.igra.matrika_kvadratov]):
+            i, j = self.najdi(2, self.igra.matrika_kvadratov)
+            k, e, f = self.prazna_stranica(i, j)
+            potrebne_poteze += [(k, e, f)]
+            self.igra.navidezno_povleci_potezo((k, e, f))
+            stevec_potez += 1
+            ena_stran = self.najdi_verigo((i, j))
+            stevec_potez += len(ena_stran)
+            self.igra.razveljavi()  # da ne nastavimo novih kvadratov na 2
+            stevec_potez -= 1
+            nepotrebne_poteze += ena_stran
+            druga_stran = []
+            if k == "vodoravno":
+                if (e == i+1) and (i != 6):
+                    druga_stran = self.najdi_verigo((i+1, j))
+                    if not druga_stran:
+                        self.igra.vodoravne[e][f] = False
+                        self.igra.matrika_kvadratov[i][j] = 3
+                        self.igra.matrika_kvadratov[i+1][j] -= 1
+                elif (e == i) and (i != 0):
+                    druga_stran = self.najdi_verigo((i-1, j))
+                    if not druga_stran:
+                        self.igra.vodoravne[e][f] = False
+                        self.igra.matrika_kvadratov[i][j] = 3
+                        self.igra.matrika_kvadratov[i-1][j] -= 1
+            elif k == "navpicno":
+                if (f == j+1) and (j != 6):
+                    druga_stran = self.najdi_verigo((i, j+1))
+                    if not druga_stran:
+                        self.igra.vodoravne[e][f] = False
+                        self.igra.matrika_kvadratov[i][j] = 3
+                        self.igra.matrika_kvadratov[i][j+1] -= 1
+                elif (f == j) and (j != 0):
+                    druga_stran = self.najdi_verigo((i, j-1))
+                    if not druga_stran:
+                        self.igra.vodoravne[e][f] = False
+                        self.igra.matrika_kvadratov[i][j] = 3
+                        self.igra.matrika_kvadratov[i][j-1] -= 1
+            stevec_potez += len(druga_stran)
+            if druga_stran:
+                self.igra.razveljavi()  # da ne nastavimo novih kvadratov na 2
+                stevec_potez -= 1
+                nepotrebne_poteze += druga_stran
+        nepotrebne_poteze = set(nepotrebne_poteze)-set(potrebne_poteze)  # ce imamo cikel, se lahko zgodi, da je tista poteza,
+        # ki loci cikel in ostale kvadrate gledana z ene strani potrebna iz druge pa nepotrebna poteza
+        return nepotrebne_poteze, zapri_poteze, stevec_potez
