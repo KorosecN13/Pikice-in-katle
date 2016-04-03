@@ -137,9 +137,6 @@ class Minimax:
                     seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
-                    # 'dobre' poteze damo na zacetek
-                    for poteza in zapri_poteze:
-                        potrebne_poteze.insert(0, potrebne_poteze.pop(potrebne_poteze.index(poteza)))
                     for k, i, j in potrebne_poteze:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -160,9 +157,6 @@ class Minimax:
                     seznam = []
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
-                    # 'dobre' poteze damo na zacetek
-                    for poteza in zapri_poteze:
-                        potrebne_poteze.insert(0, potrebne_poteze.pop(potrebne_poteze.index(poteza)))
                     for k, i, j in potrebne_poteze:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -269,7 +263,7 @@ class Minimax:
                     if self.igra.matrika_kvadratov[e][f-1] != 4:
                         self.igra.matrika_kvadratov[e][f-1] -= 1
             if len(poteze) > 3:
-                koristne_poteze += poteze[:2]
+                koristne_poteze += [poteze[1]]
                 koristne_poteze += [poteze[-1]]
             else:
                 koristne_poteze += poteze
@@ -323,7 +317,15 @@ class Minimax:
                     if not druga_stran:
                         self.igra.matrika_kvadratov[i][j-1] -= 1
             stevec_potez += len(druga_stran)
-            skodljive_poteze += [(len(ena_stran)+len(druga_stran), (k, e, f))]
+            dolzina = len(ena_stran)+len(druga_stran)
+            skodljive_poteze += [(dolzina, (k, e, f))]
+            if dolzina == 2:
+                if len(ena_stran) == len(druga_stran):
+                    skodljive_poteze += [(2, ena_stran[0])]
+                elif len(ena_stran) == 2:
+                    skodljive_poteze += [(2, ena_stran[0])]
+                elif len(druga_stran) == 2:
+                    skodljive_poteze += [(2, druga_stran[0])]
             if druga_stran:
                 # zadnja poteza nam ne sme v matriko dodati kaksen kvadrat vrednosti 2, zato kvadratu,
                 # ki ima za stranico zadnjo potezo in ni del verige, zmanjsamo vrednost
@@ -354,7 +356,8 @@ class Minimax:
                 if not self.igra.navpicne[i][j]:
                     nevtralne_poteze.append(("navpicno", i, j))
         random.shuffle(nevtralne_poteze)
-        potrebne_poteze += koristne_poteze  # najprej bo algoritem pregledal koristne poteze,
+        potrebne_poteze += zapri_poteze  # najprej bo algoritem pregledal poteze, ki zaprejo kvadratke
+        potrebne_poteze += koristne_poteze  # nato bo algoritem pregledal koristne poteze,
         potrebne_poteze += nevtralne_poteze  # nato nevtralne,
         # na koncu pa se skodljive od tiste, ki je del najkrajse verige do tiste, ki je del najdaljse verige
         skodljive_poteze.sort(key=lambda x: x[0])
@@ -422,9 +425,6 @@ class AlfaBeta:
                     seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
-                    # 'dobre' poteze damo na zacetek
-                    for poteza in zapri_poteze:
-                        potrebne_poteze.insert(0, potrebne_poteze.pop(potrebne_poteze.index(poteza)))
                     for k, i, j in potrebne_poteze:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -447,9 +447,6 @@ class AlfaBeta:
                     vrednost_najboljse = Minimax.NESKONCNO
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
-                    # 'dobre' poteze damo na zacetek
-                    for poteza in zapri_poteze:
-                        potrebne_poteze.insert(0, potrebne_poteze.pop(potrebne_poteze.index(poteza)))
                     for k, i, j in potrebne_poteze:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -559,7 +556,7 @@ class AlfaBeta:
                     if self.igra.matrika_kvadratov[e][f-1] != 4:
                         self.igra.matrika_kvadratov[e][f-1] -= 1
             if len(poteze) > 3:
-                koristne_poteze += poteze[:2]
+                koristne_poteze += [poteze[1]]
                 koristne_poteze += [poteze[-1]]
             else:
                 koristne_poteze += poteze
@@ -613,7 +610,15 @@ class AlfaBeta:
                     if not druga_stran:
                         self.igra.matrika_kvadratov[i][j-1] -= 1
             stevec_potez += len(druga_stran)
-            skodljive_poteze += [(len(ena_stran)+len(druga_stran), (k, e, f))]
+            dolzina = len(ena_stran)+len(druga_stran)
+            skodljive_poteze += [(dolzina, (k, e, f))]
+            if dolzina == 2:
+                if len(ena_stran) == len(druga_stran):
+                    skodljive_poteze += [(2, ena_stran[0])]
+                elif len(ena_stran) == 2:
+                    skodljive_poteze += [(2, ena_stran[0])]
+                elif len(druga_stran) == 2:
+                    skodljive_poteze += [(2, druga_stran[0])]
             if druga_stran:
                 # zadnja poteza nam ne sme v matriko dodati kaksen kvadrat vrednosti 2, zato kvadratu,
                 # ki ima za stranico zadnjo potezo in ni del verige, zmanjsamo vrednost
@@ -644,7 +649,8 @@ class AlfaBeta:
                 if not self.igra.navpicne[i][j]:
                     nevtralne_poteze.append(("navpicno", i, j))
         random.shuffle(nevtralne_poteze)
-        potrebne_poteze += koristne_poteze  # najprej bo algoritem pregledal koristne poteze,
+        potrebne_poteze += zapri_poteze  # najprej bo algoritem pregledal poteze, ki zaprejo kvadratke
+        potrebne_poteze += koristne_poteze  # nato bo algoritem pregledal koristne poteze,
         potrebne_poteze += nevtralne_poteze  # nato nevtralne,
         # na koncu pa se skodljive od tiste, ki je del najkrajse verige do tiste, ki je del najdaljse verige
         skodljive_poteze.sort(key=lambda x: x[0])  
