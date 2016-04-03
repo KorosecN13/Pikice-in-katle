@@ -32,7 +32,7 @@ class Racunalnik():
         self.ime = ime
         self.stevec = stevec
         self.barva = barva
-        self.algoritem = algoritem  # Algoritem, ki izra�una potezo
+        self.algoritem = algoritem  # Algoritem, ki izracuna potezo
         self.vmesnik = vmesnik
         self.igra = None
         self.mislec = None
