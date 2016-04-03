@@ -221,19 +221,6 @@ class Igra():
                 del self.zgodovina[-1]
             (self.vodoravne, self.navpicne, self.matrika_kvadratov, self.na_potezi, self.jaz_stevec, self.nasprotnik_stevec) = self.zgodovina.pop()
 
-    def veljavne_poteze(self):
-        """Vrni seznam veljavnih potez."""
-        poteze = []
-        for i in range(8):
-            for j in range(7):
-                if not self.vodoravne[i][j]:
-                    poteze.append(("vodoravno", i, j))
-        for i in range(7):
-            for j in range(8):
-                if not self.navpicne[i][j]:
-                    poteze.append(("navpicno", i, j))
-        return poteze
-
     def popravi_matriko_kvadratov(self, k, i, j):
         """ po vsaki potezi popravi matriko, kjer je shranjeno stevilo ze narisanih crt okoli vsakega kvadrata """
         p = 0
