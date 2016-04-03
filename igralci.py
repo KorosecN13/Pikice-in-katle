@@ -136,7 +136,6 @@ class Minimax:
                     vrednost_najboljse = -Minimax.NESKONCNO
                     seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
-                    random.shuffle(potrebne_poteze)
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
                     # 'dobre' poteze damo na zacetek
                     for poteza in zapri_poteze:
@@ -160,7 +159,6 @@ class Minimax:
                     vrednost_najboljse = Minimax.NESKONCNO
                     seznam = []
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
-                    random.shuffle(potrebne_poteze)
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
                     # 'dobre' poteze damo na zacetek
                     for poteza in zapri_poteze:
@@ -222,15 +220,17 @@ class Minimax:
         poteze = []
         while self.igra.matrika_kvadratov[i][j] == 3:
             poteza = self.prazna_stranica(i, j)
+            if not poteza:  # lahko se zgodi v ciklu
+                break
             self.igra.navidezno_povleci_potezo(poteza)
             poteze += [poteza]
             if poteza[0] == "vodoravno":
-                if (poteza[1] > i) and (i != 6):
+                if (poteza[1] == i+1) and (i != 6):
                     i += 1
                 elif (poteza[1] == i) and (i != 0):
                     i -= 1
             elif poteza[0] == "navpicno":
-                if (poteza[2] > j) and (j != 6):
+                if (poteza[2] == j+1) and (j != 6):
                     j += 1
                 elif (poteza[2] == j) and (j != 0):
                     j -= 1
@@ -238,8 +238,11 @@ class Minimax:
 
     def potrebno_pregledati(self):
         """ poisce poteze, ki jih je potrebno pregledati med iskanjem najboljse poteze """
-        potrebne_poteze = []
-        zapri_poteze = []  # poteze, ki jih bo algoritem najprej pregledal
+        potrebne_poteze = []  # poteze, ki jih mora pregledati
+        koristne_poteze = []  # poteze, ki so del verig, ki jih lahko igralec zapre
+        nevtralne_poteze = []  # poteze s katerimi nobeden od igralcev ne bo mogel zapreti kvadratkov
+        skodljive_poteze = []  # poteze, ki bodo nasprotniku odprle verige
+        zapri_poteze = []  # poteze, ki jih bo algoritem najprej pregledal (s temi potezami bo zaprl kvadratke)
         stevec_potez = 0
         # v verigah, ki jih lahko v tem trenutku zacnemo zapirati, so potrebne poteze le prvi dve in zadnja
         while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
@@ -266,16 +269,15 @@ class Minimax:
                     if self.igra.matrika_kvadratov[e][f-1] != 4:
                         self.igra.matrika_kvadratov[e][f-1] -= 1
             if len(poteze) > 3:
-                potrebne_poteze += poteze[:2]
-                potrebne_poteze += [poteze[-1]]
+                koristne_poteze += poteze[:2]
+                koristne_poteze += [poteze[-1]]
             else:
-                potrebne_poteze += poteze
+                koristne_poteze += poteze
             stevec_potez += len(poteze)
         # v verigah, ki jih se ne moremo zapirati, je potrebna le ena poteza
         while sum([x.count(2) for x in self.igra.matrika_kvadratov]):
             i, j = self.najdi(2, self.igra.matrika_kvadratov)
             k, e, f = self.prazna_stranica(i, j)
-            potrebne_poteze += [(k, e, f)]
             self.igra.navidezno_povleci_potezo((k, e, f))
             stevec_potez += 1
             # poteza, ki smo jo pravkar odigrali, na verigo razdeli na dva dela - pogledati moramo oba
@@ -321,6 +323,7 @@ class Minimax:
                     if not druga_stran:
                         self.igra.matrika_kvadratov[i][j-1] -= 1
             stevec_potez += len(druga_stran)
+            skodljive_poteze += [(len(ena_stran)+len(druga_stran), (k, e, f))]
             if druga_stran:
                 # zadnja poteza nam ne sme v matriko dodati kaksen kvadrat vrednosti 2, zato kvadratu,
                 # ki ima za stranico zadnjo potezo in ni del verige, zmanjsamo vrednost
@@ -345,11 +348,18 @@ class Minimax:
         for i in range(8):
             for j in range(7):
                 if not self.igra.vodoravne[i][j]:
-                    potrebne_poteze.append(("vodoravno", i, j))
+                    nevtralne_poteze.append(("vodoravno", i, j))
         for i in range(7):
             for j in range(8):
                 if not self.igra.navpicne[i][j]:
-                    potrebne_poteze.append(("navpicno", i, j))
+                    nevtralne_poteze.append(("navpicno", i, j))
+        random.shuffle(nevtralne_poteze)
+        potrebne_poteze += koristne_poteze  # najprej bo algoritem pregledal koristne poteze,
+        potrebne_poteze += nevtralne_poteze  # nato nevtralne,
+        # na koncu pa se skodljive od tiste, ki je del najkrajse verige do tiste, ki je del najdaljse verige
+        skodljive_poteze.sort(key=lambda x: x[0])
+        for v, poteza in skodljive_poteze:
+            potrebne_poteze += [poteza]
         return potrebne_poteze, zapri_poteze, stevec_potez
 
 
@@ -411,7 +421,6 @@ class AlfaBeta:
                     vrednost_najboljse = -Minimax.NESKONCNO
                     seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
-                    random.shuffle(potrebne_poteze)
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
                     # 'dobre' poteze damo na zacetek
                     for poteza in zapri_poteze:
@@ -437,7 +446,6 @@ class AlfaBeta:
                     najboljsa_poteza = None
                     vrednost_najboljse = Minimax.NESKONCNO
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
-                    random.shuffle(potrebne_poteze)
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
                     # 'dobre' poteze damo na zacetek
                     for poteza in zapri_poteze:
@@ -502,6 +510,8 @@ class AlfaBeta:
         poteze = []
         while self.igra.matrika_kvadratov[i][j] == 3:
             poteza = self.prazna_stranica(i, j)
+            if not poteza:  # lahko se zgodi v ciklu
+                break
             self.igra.navidezno_povleci_potezo(poteza)
             poteze += [poteza]
             if poteza[0] == "vodoravno":
@@ -518,8 +528,11 @@ class AlfaBeta:
 
     def potrebno_pregledati(self):
         """ poisce poteze, ki jih je potrebno pregledati med iskanjem najboljse poteze """
-        potrebne_poteze = []
-        zapri_poteze = []  # poteze, ki jih bo algoritem najprej pregledal
+        potrebne_poteze = []  # poteze, ki jih mora pregledati
+        koristne_poteze = []  # poteze, ki so del verig, ki jih lahko igralec zapre
+        nevtralne_poteze = []  # poteze s katerimi nobeden od igralcev ne bo mogel zapreti kvadratkov
+        skodljive_poteze = []  # poteze, ki bodo nasprotniku odprle verige
+        zapri_poteze = []  # poteze, ki jih bo algoritem najprej pregledal (s temi potezami bo zaprl kvadratke)
         stevec_potez = 0
         # v verigah, ki jih lahko v tem trenutku zacnemo zapirati, so potrebne poteze le prvi dve in zadnja
         while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
@@ -546,16 +559,15 @@ class AlfaBeta:
                     if self.igra.matrika_kvadratov[e][f-1] != 4:
                         self.igra.matrika_kvadratov[e][f-1] -= 1
             if len(poteze) > 3:
-                potrebne_poteze += poteze[:2]
-                potrebne_poteze += [poteze[-1]]
+                koristne_poteze += poteze[:2]
+                koristne_poteze += [poteze[-1]]
             else:
-                potrebne_poteze += poteze
+                koristne_poteze += poteze
             stevec_potez += len(poteze)
         # v verigah, ki jih se ne moremo zapirati, je potrebna le ena poteza
         while sum([x.count(2) for x in self.igra.matrika_kvadratov]):
             i, j = self.najdi(2, self.igra.matrika_kvadratov)
             k, e, f = self.prazna_stranica(i, j)
-            potrebne_poteze += [(k, e, f)]
             self.igra.navidezno_povleci_potezo((k, e, f))
             stevec_potez += 1
             # poteza, ki smo jo pravkar odigrali, na verigo razdeli na dva dela - pogledati moramo oba
@@ -601,6 +613,7 @@ class AlfaBeta:
                     if not druga_stran:
                         self.igra.matrika_kvadratov[i][j-1] -= 1
             stevec_potez += len(druga_stran)
+            skodljive_poteze += [(len(ena_stran)+len(druga_stran), (k, e, f))]
             if druga_stran:
                 # zadnja poteza nam ne sme v matriko dodati kaksen kvadrat vrednosti 2, zato kvadratu,
                 # ki ima za stranico zadnjo potezo in ni del verige, zmanjsamo vrednost
@@ -625,9 +638,16 @@ class AlfaBeta:
         for i in range(8):
             for j in range(7):
                 if not self.igra.vodoravne[i][j]:
-                    potrebne_poteze.append(("vodoravno", i, j))
+                    nevtralne_poteze.append(("vodoravno", i, j))
         for i in range(7):
             for j in range(8):
                 if not self.igra.navpicne[i][j]:
-                    potrebne_poteze.append(("navpicno", i, j))
+                    nevtralne_poteze.append(("navpicno", i, j))
+        random.shuffle(nevtralne_poteze)
+        potrebne_poteze += koristne_poteze  # najprej bo algoritem pregledal koristne poteze,
+        potrebne_poteze += nevtralne_poteze  # nato nevtralne,
+        # na koncu pa se skodljive od tiste, ki je del najkrajse verige do tiste, ki je del najdaljse verige
+        skodljive_poteze.sort(key=lambda x: x[0])  
+        for v, poteza in skodljive_poteze:
+            potrebne_poteze += [poteza]
         return potrebne_poteze, zapri_poteze, stevec_potez
