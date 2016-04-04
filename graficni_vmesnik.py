@@ -79,7 +79,7 @@ class Vmesnik():
                 self.polje.create_oval(50*(i+1)-5, 50*(j+1)-5, 50*(i+1)+5, 50*(j+1)+5, fill='gold4', width=0)
 
         # spremenljivke, ki dolocajo barvi igralcev
-        self.barva1 = 'light blue'
+        self.barva1 = 'deep sky blue'
         self.barva2 = 'orange'
 
         # Naredimo spremenljivke, ki hranijo ime igralcev
