@@ -182,10 +182,6 @@ class Igra():
         """ po vsaki potezi preveri ali je konec igre """
         return self.vmesnik.igralec1.stevec.get() + self.vmesnik.igralec2.stevec.get() == 49
 
-    def konec_igre1(self):
-        return all([all(self.vodoravne[i])for i in range(len(self.vodoravne))]) and \
-               all([all(self.navpicne[i])for i in range(len(self.navpicne))])
-
     def kopija(self):
         """ vrni kopijo te igre """
         kopija = Igra(None)
