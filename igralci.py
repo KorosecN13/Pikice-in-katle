@@ -241,7 +241,6 @@ class Minimax:
         # v verigah, ki jih lahko v tem trenutku zacnemo zapirati, so potrebne poteze le prvi dve in zadnja
         while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
             i, j = self.najdi(3, self.igra.matrika_kvadratov)
-            zapri_poteze += [self.prazna_stranica(i, j)]
             poteze = self.najdi_verigo((i, j))
             # zadnja poteza nam ne sme v matriko dodati kaksen kvadrat vrednosti 2, zato kvadratu,
             # ki ima za stranico zadnjo potezo in ni del verige, zmanjsamo vrednost
@@ -262,11 +261,9 @@ class Minimax:
                 if f != 0:
                     if self.igra.matrika_kvadratov[e][f-1] != 4:
                         self.igra.matrika_kvadratov[e][f-1] -= 1
-            if len(poteze) > 3:
+            zapri_poteze += [poteze[0]]
+            if len(poteze) > 1:
                 koristne_poteze += [poteze[1]]
-                koristne_poteze += [poteze[-1]]
-            else:
-                koristne_poteze += poteze
             stevec_potez += len(poteze)
         # v verigah, ki jih se ne moremo zapirati, je potrebna le ena poteza
         while sum([x.count(2) for x in self.igra.matrika_kvadratov]):
@@ -360,7 +357,7 @@ class Minimax:
         potrebne_poteze += koristne_poteze  # nato bo algoritem pregledal koristne poteze,
         potrebne_poteze += nevtralne_poteze  # nato nevtralne,
         # na koncu pa se skodljive od tiste, ki je del najkrajse verige do tiste, ki je del najdaljse verige
-        skodljive_poteze.sort(key=lambda x: x[0])
+        skodljive_poteze.sort(key=lambda x: x[0])  
         for v, poteza in skodljive_poteze:
             potrebne_poteze += [poteza]
         return potrebne_poteze, zapri_poteze, stevec_potez
@@ -534,7 +531,6 @@ class AlfaBeta:
         # v verigah, ki jih lahko v tem trenutku zacnemo zapirati, so potrebne poteze le prvi dve in zadnja
         while sum([x.count(3) for x in self.igra.matrika_kvadratov]):
             i, j = self.najdi(3, self.igra.matrika_kvadratov)
-            zapri_poteze += [self.prazna_stranica(i, j)]
             poteze = self.najdi_verigo((i, j))
             # zadnja poteza nam ne sme v matriko dodati kaksen kvadrat vrednosti 2, zato kvadratu,
             # ki ima za stranico zadnjo potezo in ni del verige, zmanjsamo vrednost
@@ -555,11 +551,9 @@ class AlfaBeta:
                 if f != 0:
                     if self.igra.matrika_kvadratov[e][f-1] != 4:
                         self.igra.matrika_kvadratov[e][f-1] -= 1
-            if len(poteze) > 3:
+            zapri_poteze += [poteze[0]]
+            if len(poteze) > 1:
                 koristne_poteze += [poteze[1]]
-                koristne_poteze += [poteze[-1]]
-            else:
-                koristne_poteze += poteze
             stevec_potez += len(poteze)
         # v verigah, ki jih se ne moremo zapirati, je potrebna le ena poteza
         while sum([x.count(2) for x in self.igra.matrika_kvadratov]):
