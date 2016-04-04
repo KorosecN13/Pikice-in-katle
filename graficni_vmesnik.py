@@ -171,6 +171,7 @@ class Vmesnik():
 
     def polje_klik(self, event):
         """ poklice ustrezno fukcijo klik - za cloveka ali racunalnik """
+        self.master.focus()
         x, y = event.x, event.y
         if self.igra.na_potezi == self.igralec1:
             self.igralec1.klik(x, y)
