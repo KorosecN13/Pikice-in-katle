@@ -137,6 +137,8 @@ class Minimax:
                     seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
+                    for poteza in zapri_poteze:
+                        self.igra.navidezno_povleci_potezo(poteza)  # odigra poteze, ki se v vsakem primeru splacajo
                     for k, i, j in potrebne_poteze:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -150,6 +152,8 @@ class Minimax:
                             vrednost_najboljse = vrednost
                             najboljsa_poteza = (k, i, j)
                             seznam = s
+                    self.igra.razveljavi(len(zapri_poteze))
+                    zapri = zapri_poteze[::-1]
                 else:
                     # Minimiziramo
                     najboljsa_poteza = None
@@ -157,6 +161,8 @@ class Minimax:
                     seznam = []
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
+                    for poteza in zapri_poteze:
+                        self.igra.navidezno_povleci_potezo(poteza)  # odigra poteze, ki se v vsakem primeru splacajo
                     for k, i, j in potrebne_poteze:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -167,10 +173,11 @@ class Minimax:
                         if vrednost < vrednost_najboljse:
                             vrednost_najboljse = vrednost
                             najboljsa_poteza = k, i, j
+                    self.igra.razveljavi(len(zapri_poteze))
                 assert (najboljsa_poteza is not None), "minimax: izracunana poteza je None"
                 if globina == self.globina:
                     # ce je globina enaka zacetni globini, smo dobili potezo, ki jo bo igralec odigral
-                    seznam_potez = seznam + [najboljsa_poteza]
+                    seznam_potez = seznam + [najboljsa_poteza] + zapri
                 return vrednost_najboljse, seznam_potez
 
     def vrednost_pozicije(self):
@@ -261,9 +268,13 @@ class Minimax:
                 if f != 0:
                     if self.igra.matrika_kvadratov[e][f-1] != 4:
                         self.igra.matrika_kvadratov[e][f-1] -= 1
-            zapri_poteze += [poteze[0]]
-            if len(poteze) > 1:
-                koristne_poteze += [poteze[1]]
+            if len(poteze) > 3:
+                zapri_poteze += poteze[:-3]
+                koristne_poteze += poteze[-3:-1]
+            elif len(poteze) > 1:
+                koristne_poteze += poteze[:2]
+            else:
+                koristne_poteze += poteze
             stevec_potez += len(poteze)
         # v verigah, ki jih se ne moremo zapirati, je potrebna le ena poteza
         while sum([x.count(2) for x in self.igra.matrika_kvadratov]):
@@ -353,8 +364,7 @@ class Minimax:
                 if not self.igra.navpicne[i][j]:
                     nevtralne_poteze.append(("navpicno", i, j))
         random.shuffle(nevtralne_poteze)
-        potrebne_poteze += zapri_poteze  # najprej bo algoritem pregledal poteze, ki zaprejo kvadratke
-        potrebne_poteze += koristne_poteze  # nato bo algoritem pregledal koristne poteze,
+        potrebne_poteze += koristne_poteze  # najprej bo algoritem pregledal koristne poteze,
         potrebne_poteze += nevtralne_poteze  # nato nevtralne,
         # na koncu pa se skodljive od tiste, ki je del najkrajse verige do tiste, ki je del najdaljse verige
         skodljive_poteze.sort(key=lambda x: x[0])  
@@ -422,6 +432,8 @@ class AlfaBeta:
                     seznam = []  # seznam hrani vse poteze, ki jih bo racunalnik po koncu racunanja odigral
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
+                    for poteza in zapri_poteze:
+                        self.igra.navidezno_povleci_potezo(poteza)  # odigra poteze, ki se v vsakem primeru splacajo
                     for k, i, j in potrebne_poteze:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -438,12 +450,16 @@ class AlfaBeta:
                             seznam = s
                         if beta <= alfa:
                             break
+                    self.igra.razveljavi(len(zapri_poteze))
+                    zapri = zapri_poteze[::-1]
                 else:
                     # Minimiziramo
                     najboljsa_poteza = None
                     vrednost_najboljse = Minimax.NESKONCNO
                     potrebne_poteze, zapri_poteze, stevec_potez = self.potrebno_pregledati()
                     self.igra.razveljavi(stevec_potez)  # poteze, ki smo jih naredili med iskanjem potrebnih potez
+                    for poteza in zapri_poteze:
+                        self.igra.navidezno_povleci_potezo(poteza)  # odigra poteze, ki se v vsakem primeru splacajo
                     for k, i, j in potrebne_poteze:
                         p = self.igra.navidezno_povleci_potezo((k, i, j))
                         if p:
@@ -457,10 +473,11 @@ class AlfaBeta:
                             najboljsa_poteza = k, i, j
                         if beta <= alfa:
                             break
-                assert (najboljsa_poteza is not None), "alfabeta: izracunana poteza je None"
+                    self.igra.razveljavi(len(zapri_poteze))
+                assert (najboljsa_poteza is not None), "alfabeta: izracunana poteza je None, {0}, {1}, {2}".format(self.igra.vodoravne, self.igra.navpicne, self.igra.matrika_kvadratov)
                 if globina == self.globina:
                     # ce je globina enaka zacetni globini, smo dobili potezo, ki jo bo igralec odigral
-                    seznam_potez = seznam + [najboljsa_poteza]
+                    seznam_potez = seznam + [najboljsa_poteza] + zapri
                 return vrednost_najboljse, seznam_potez
 
     def vrednost_pozicije(self):
@@ -551,9 +568,13 @@ class AlfaBeta:
                 if f != 0:
                     if self.igra.matrika_kvadratov[e][f-1] != 4:
                         self.igra.matrika_kvadratov[e][f-1] -= 1
-            zapri_poteze += [poteze[0]]
-            if len(poteze) > 1:
-                koristne_poteze += [poteze[1]]
+            if len(poteze) > 3:
+                zapri_poteze += poteze[:-3]
+                koristne_poteze += poteze[-3:-1]
+            elif len(poteze) > 1:
+                koristne_poteze += poteze[:2]
+            else:
+                zapri_poteze += poteze
             stevec_potez += len(poteze)
         # v verigah, ki jih se ne moremo zapirati, je potrebna le ena poteza
         while sum([x.count(2) for x in self.igra.matrika_kvadratov]):
@@ -643,11 +664,12 @@ class AlfaBeta:
                 if not self.igra.navpicne[i][j]:
                     nevtralne_poteze.append(("navpicno", i, j))
         random.shuffle(nevtralne_poteze)
-        potrebne_poteze += zapri_poteze  # najprej bo algoritem pregledal poteze, ki zaprejo kvadratke
-        potrebne_poteze += koristne_poteze  # nato bo algoritem pregledal koristne poteze,
+        potrebne_poteze += koristne_poteze  # najprej bo algoritem pregledal koristne poteze,
         potrebne_poteze += nevtralne_poteze  # nato nevtralne,
         # na koncu pa se skodljive od tiste, ki je del najkrajse verige do tiste, ki je del najdaljse verige
         skodljive_poteze.sort(key=lambda x: x[0])  
         for v, poteza in skodljive_poteze:
             potrebne_poteze += [poteza]
+        if not potrebne_poteze:
+            potrebne_poteze += [zapri_poteze.pop()]
         return potrebne_poteze, zapri_poteze, stevec_potez
